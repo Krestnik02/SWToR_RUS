@@ -7,15 +7,20 @@ using System.Xml;
 using System.Net;
 using System.IO;
 using System.Data.SQLite;
+using MySql.Data.MySqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Configuration;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace SWToR_RUS
 {
     public partial class Form2 : Form
     {
+
+        public bool authorization = false;
+
         public ulong hash_g;
 
         public ulong vOut;
@@ -31,6 +36,54 @@ namespace SWToR_RUS
         public string go_to_file = "0";
 
         public string searching_row_id = "";
+
+        public string buffer = "";
+
+        public string connStr_mysql = "server=" + "195.234.5.250" + //Адрес сервера (для локальной базы пишите "localhost")
+                    ";user=" + "swtor" + //Имя пользователя
+                    ";database=" + "swtor_ru" + //Имя базы данных
+                    ";port=" + "3306" + //Порт для подключения
+                    ";password=" + "KHUS86!JHksds" + //Пароль для подключения
+                    ";default command timeout=0;";
+
+        public static bool VerifyHashedPassword(string hashedPassword, string password)
+        {
+            byte[] buffer4;
+            if (hashedPassword == null)
+            {
+                return false;
+            }
+            if (password == null)
+            {
+                throw new ArgumentNullException("password");
+            }
+            byte[] src = Convert.FromBase64String(hashedPassword);
+            if ((src.Length != 0x31) || (src[0] != 0))
+            {
+                return false;
+            }
+            byte[] dst = new byte[0x10];
+            Buffer.BlockCopy(src, 1, dst, 0, 0x10);
+            byte[] buffer3 = new byte[0x20];
+            Buffer.BlockCopy(src, 0x11, buffer3, 0, 0x20);
+            using (Rfc2898DeriveBytes bytes = new Rfc2898DeriveBytes(password, dst, 0x3e8))
+            {
+                buffer4 = bytes.GetBytes(0x20);
+            }
+            return ByteArraysEqual(buffer3, buffer4);
+        }
+
+        public static bool ByteArraysEqual(byte[] b1, byte[] b2)
+        {
+            if (b1 == b2) return true;
+            if (b1 == null || b2 == null) return false;
+            if (b1.Length != b2.Length) return false;
+            for (int i = 0; i < b1.Length; i++)
+            {
+                if (b1[i] != b2[i]) return false;
+            }
+            return true;
+        }
 
         public Form2()
         {
@@ -54,11 +107,34 @@ namespace SWToR_RUS
             if (ConfigurationManager.AppSettings["author"] != null)
             {
                 new_author.Text = configuration.AppSettings.Settings["author"].Value;
-            }                
+
+                if (ConfigurationManager.AppSettings["email"] != null)
+                {
+                    using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
+                    {
+                        conn.Open();
+                        string sql = "SELECT id, email, name, pass FROM users WHERE email='" + configuration.AppSettings.Settings["email"].Value + "'";
+                        MySqlCommand command = new MySqlCommand(sql, conn);
+                        MySqlDataReader row = command.ExecuteReader();
+                        if (row.HasRows)
+                        {
+                            while (row.Read())
+                            {
+                                if (row["pass"].ToString() == configuration.AppSettings.Settings["password"].Value)
+                                {
+                                    new_author.Enabled = false;
+                                    auth.Enabled = false;
+                                    authorization = true;
+                                }
+                            }
+                            row.Close();
+                        }
+                        conn.Close();
+                    }
+                }
+            }
         }
-        private void Form2_Resize(object sender, EventArgs e)
-        {
-        }
+
         private async void file_to_trans_SelectedIndexChanged(object sender, EventArgs e)
         {            
             if (file_to_trans.SelectedIndex != -1)
@@ -115,19 +191,31 @@ namespace SWToR_RUS
                 fileinfo_user.Enabled = true;
 
         }
-        void data_trans_file_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {  
-            if (e.ColumnIndex == 2)
+        public void data_trans_file_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (buffer != Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[e.ColumnIndex].Value))
             {
-                data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1";
+                if (e.ColumnIndex == 2)
+                {
+                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1";
+                }
+                if (e.ColumnIndex == 3)
+                {
+                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1";
+                }
             }
-            if (e.ColumnIndex == 3)
-            {
-                data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1";
-            }
+            
             fileinfo_user.Enabled = true;
             if (fileinfo_user.Text != "")
                 upload_translate.Enabled = true;
+        }
+
+        public void data_trans_file_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if ((e.ColumnIndex == 2 || e.ColumnIndex == 3) && data_trans_file.Rows[e.RowIndex].Cells[4].Value.ToString() != "Deepl")
+            {
+                buffer = Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[e.ColumnIndex].Value);
+            }
         }
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
@@ -159,12 +247,13 @@ namespace SWToR_RUS
             List<string> list_keys = new List<string>();
             if (new_author.Text != "" && new_author.Text != "Напишите своё имя или оставьте как есть")
                 new_authr = new_author.Text;
-            if (new_authr != "5")
+            if (new_authr != "5" && new_authr != "4" && new_authr != "deepl" && new_authr != "1" && new_authr != "2")
             {
                 Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                 configuration.AppSettings.Settings["author"].Value = new_authr;
                 configuration.Save(ConfigurationSaveMode.Modified);
             }
+            
             if (File.Exists("user_translation\\" + fileinfo_user.Text + ".xml"))
             {
                 DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите продолжать записывать в него?", "Подтверждение", MessageBoxButtons.YesNo);
@@ -239,21 +328,43 @@ namespace SWToR_RUS
                             s.Close();
                             list_keys.ForEach(delegate (string name)
                             {
-                                if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                if (Convert.ToString(row.Cells["text_ru_w"].Value) == "" && authorization == true)
                                 {
-                                    sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w=NULL,translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w=NULL WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
+                                    }
+                                    else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
+                                    }
+                                    else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_w=NULL,translator_w=NULL WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
+                                    }
                                 }
-                                else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+                                else
                                 {
-                                    sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                    }
+                                    else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                    }
+                                    else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                    }
                                 }
-                                else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                {
-                                    sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
-                                }
+
                                 using (StreamWriter file_for_exam =
                          new StreamWriter("user_translation\\" + fileinfo_user.Text + ".xml", true, encoding: Encoding.UTF8))
                                 {
@@ -754,6 +865,19 @@ namespace SWToR_RUS
         private void html_spec_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://html5book.ru/specsimvoly-html/");
+        }
+
+        private void auth_Click(object sender, EventArgs e)
+        {
+            
+            Form3 form3 = new Form3(new MyDelegate(GetData));
+            form3.Show();
+        }
+        void GetData(string param)
+        {
+            new_author.Enabled = false;
+            auth.Enabled = false;
+            new_author.Text = param;
         }
     }
 }

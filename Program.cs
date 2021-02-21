@@ -19,4 +19,5 @@ namespace SWToR_RUS
             Application.Run(new Form1());
         }
     }
+    public delegate void MyDelegate(string data);
 }
