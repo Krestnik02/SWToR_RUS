@@ -196,6 +196,12 @@ namespace SWToR_RUS
             string searchValue = "1";
             string sql_insert = "";
             int num_edited_rows = 0;
+            string change_other_strings = "no";
+            DialogResult dialogResult1 = MessageBox.Show("Заменять уже отредактированные строки?", "Подтверждение", MessageBoxButtons.YesNo);
+            if (dialogResult1 == DialogResult.Yes)
+            {
+                change_other_strings = "yes";
+            }
             using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
             {
                 sqlite_conn.Open();
@@ -216,11 +222,19 @@ namespace SWToR_RUS
                             SQLiteDataReader s = sqlite_cmd.ExecuteReader();
                             while (s.Read())
                             {
-                                if (row.Cells["key"].Value.ToString() == s["key_unic"].ToString() || s["translator_m"].ToString() == "Deepl")
+                                if (change_other_strings == "no")
                                 {
-                                    if (!list_keys.Contains(s["key_unic"].ToString()))
-                                        list_keys.Add(s["key_unic"].ToString());
+                                    if (row.Cells["key"].Value.ToString() == s["key_unic"].ToString() || s["translator_m"].ToString() == "Deepl")
+                                    {
+                                        if (!list_keys.Contains(s["key_unic"].ToString()))
+                                            list_keys.Add(s["key_unic"].ToString());
+                                    }
                                 }
+                                else if (change_other_strings == "yes")
+                                {
+                                        if (!list_keys.Contains(s["key_unic"].ToString()))
+                                            list_keys.Add(s["key_unic"].ToString());
+                                }  
                             }
                             s.Close();
                             list_keys.ForEach(delegate (string name)

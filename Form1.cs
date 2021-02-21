@@ -594,61 +594,7 @@ namespace SWToR_RUS
             Config.Save(ConfigurationSaveMode.Modified);
             ConfigurationManager.RefreshSection("appSettings");
         }
-        public int EndOff(string filename)
-        {
-            int num = 0;
-            int num2 = 0;
-            int num3 = 0;
-            using (FileStream input = new FileStream(filename, FileMode.Open, FileAccess.Read))
-            {
-                BinaryReader binaryReader = new BinaryReader(input);
-                binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
-                uint num4 = binaryReader.ReadUInt32();
-                binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
-                num3 = binaryReader.ReadInt32();
-                int num5 = (int)Math.Ceiling((double)num3 / 1000.0);
-                binaryReader.BaseStream.Seek(num4, SeekOrigin.Begin);
-                long position = binaryReader.BaseStream.Position;
-                int num6 = 0;
-                while (num5 > 0)
-                {
-                    binaryReader.BaseStream.Position = position;
-                    uint num7 = binaryReader.ReadUInt32();
-                    if (num7 != 1000)
-                        break;
-                    position = binaryReader.ReadUInt32();
-                    binaryReader.ReadUInt32();
-                    for (int i = 0; i < num7; i++)
-                    {
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        uint num8 = binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt32();
-                        binaryReader.ReadUInt16();
-                        _ = binaryReader.BaseStream.Position;
-                        num6++;
-                        if (num8 == 2996987697u)
-                            num++;
-                        if (num8 == 2571387593u)
-                            num2++;
-                    }
-                    num5--;
-                }
-            }
-            if (num > 1)
-                return 0;
-            if (num2 > 1)
-                return 0;
-            if (filename.Contains("swtor_en-us_global_1") && num3 < 5312)
-                return 2;
-            if (filename.Contains("swtor_main_gfx_assets_1") && num3 < 84210)
-                return 2;
-            return 1;
-        }
+        
         private void del_btn_Click(object sender, EventArgs e) //Удаляем русификатор
         {
             Install_btn.Enabled = false; //Отключаем временно все элементы
@@ -1906,6 +1852,134 @@ namespace SWToR_RUS
                     info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(sr_trans.ReadLine() + "\n")));
             }
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Готово!\n")));
+        }
+
+        private void ins_font_Click(object sender, EventArgs e)
+        {
+            byte[] array = File.ReadAllBytes("db\\fonts.gfx");
+            int z = 290505;
+            int f = 465311;
+            string str = ConfigurationManager.AppSettings["gamepath"];
+            FileStream fileStream = new FileStream(str + "\\Assets\\swtor_main_gfx_assets_1.tor", FileMode.Open, FileAccess.ReadWrite);
+            int num = EndOff1(fileStream);
+            BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+            uint num2 = (uint)fileStream.Length;
+            binaryWriter.BaseStream.Position = num;
+            binaryWriter.Write(num2);
+            binaryWriter.Write(0);
+            binaryWriter.Write(36);
+            binaryWriter.Write(z);
+            binaryWriter.Write(f);
+            binaryWriter.Write(2844553745u);
+            binaryWriter.Write(2571387593u);
+            binaryWriter.Write(0);
+            binaryWriter.Write((short)1);
+            binaryWriter.BaseStream.Position = num2;
+            binaryWriter.Write(array);
+            binaryWriter.Close();
+            fileStream.Close();
+
+        }
+        public int EndOff(string filename)
+        {
+            int num = 0;
+            int num2 = 0;
+            int num3 = 0;
+            using (FileStream input = new FileStream(filename, FileMode.Open, FileAccess.Read))
+            {
+                BinaryReader binaryReader = new BinaryReader(input);
+                binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
+                uint num4 = binaryReader.ReadUInt32();
+                binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
+                num3 = binaryReader.ReadInt32();
+                int num5 = (int)Math.Ceiling((double)num3 / 1000.0);
+                binaryReader.BaseStream.Seek(num4, SeekOrigin.Begin);
+                long position = binaryReader.BaseStream.Position;
+                int num6 = 0;
+                while (num5 > 0)
+                {
+                    binaryReader.BaseStream.Position = position;
+                    uint num7 = binaryReader.ReadUInt32();
+                    if (num7 != 1000)
+                        break;
+                    position = binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    for (int i = 0; i < num7; i++)
+                    {
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        uint num8 = binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt32();
+                        binaryReader.ReadUInt16();
+                        _ = binaryReader.BaseStream.Position;
+                        num6++;
+                        if (num8 == 2996987697u)
+                            num++;
+                        if (num8 == 2571387593u)
+                            num2++;
+                    }
+                    num5--;
+                }
+            }
+            if (num > 1)
+                return 0;
+            if (num2 > 1)
+                return 0;
+            if (filename.Contains("swtor_en-us_global_1") && num3 < 5312)
+                return 2;
+            if (filename.Contains("swtor_main_gfx_assets_1") && num3 < 84210)
+                return 2;
+            return 1;
+        }
+        public int EndOff1(FileStream fileStream)
+        {
+            int result = 0;
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
+            uint num = binaryReader.ReadUInt32();
+            binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
+            uint num2 = binaryReader.ReadUInt32();
+            int num3 = (int)Math.Ceiling((double)num2 / 1000.0);
+            binaryReader.BaseStream.Seek(num, SeekOrigin.Begin);
+            long position = binaryReader.BaseStream.Position;
+            int num4 = 0;
+            long num5 = 0L;
+            while (num3 > 0)
+            {
+                binaryReader.BaseStream.Position = position;
+                uint num6 = binaryReader.ReadUInt32();
+                if (num6 != 1000)
+                {
+                    break;
+                }
+                position = binaryReader.ReadUInt32();
+                binaryReader.ReadUInt32();
+                for (int i = 0; i < num6; i++)
+                {
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt16();
+                    num5 = binaryReader.BaseStream.Position;
+                    num4++;
+                    if (num4 == num2)
+                    {
+                        result = (int)num5 + 34;
+                        break;
+                    }
+                }
+                num3--;
+            }
+            return result;
         }
     }
 

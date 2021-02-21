@@ -53,6 +53,7 @@ namespace SWToR_RUS
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.ins_font = new System.Windows.Forms.Button();
             this.changes = new System.Windows.Forms.CheckBox();
             this.auto_translate = new System.Windows.Forms.CheckBox();
             this.recover = new System.Windows.Forms.Button();
@@ -91,6 +92,7 @@ namespace SWToR_RUS
             this.Updater = new System.Windows.Forms.Label();
             this.Update_app = new System.Windows.Forms.LinkLabel();
             this.steam_game = new System.Windows.Forms.CheckBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -154,6 +156,7 @@ namespace SWToR_RUS
             // 
             // groupBox6
             // 
+            this.groupBox6.Controls.Add(this.ins_font);
             this.groupBox6.Controls.Add(this.changes);
             this.groupBox6.Controls.Add(this.auto_translate);
             this.groupBox6.Controls.Add(this.recover);
@@ -161,12 +164,22 @@ namespace SWToR_RUS
             this.groupBox6.Controls.Add(this.upload_to_server);
             this.groupBox6.Controls.Add(this.editor_btn);
             this.groupBox6.Controls.Add(this.google_opt);
-            this.groupBox6.Location = new System.Drawing.Point(136, 39);
+            this.groupBox6.Location = new System.Drawing.Point(136, 33);
             this.groupBox6.Name = "groupBox6";
-            this.groupBox6.Size = new System.Drawing.Size(243, 206);
+            this.groupBox6.Size = new System.Drawing.Size(243, 212);
             this.groupBox6.TabIndex = 8;
             this.groupBox6.TabStop = false;
             this.groupBox6.Text = "Дополнительные опции";
+            // 
+            // ins_font
+            // 
+            this.ins_font.Location = new System.Drawing.Point(17, 179);
+            this.ins_font.Name = "ins_font";
+            this.ins_font.Size = new System.Drawing.Size(210, 29);
+            this.ins_font.TabIndex = 22;
+            this.ins_font.Text = "Установить шрифт";
+            this.ins_font.UseVisualStyleBackColor = true;
+            this.ins_font.Click += new System.EventHandler(this.ins_font_Click);
             // 
             // changes
             // 
@@ -197,7 +210,7 @@ namespace SWToR_RUS
             // 
             // recover
             // 
-            this.recover.Location = new System.Drawing.Point(17, 133);
+            this.recover.Location = new System.Drawing.Point(17, 119);
             this.recover.Name = "recover";
             this.recover.Size = new System.Drawing.Size(210, 29);
             this.recover.TabIndex = 17;
@@ -208,7 +221,7 @@ namespace SWToR_RUS
             // upload_from_server
             // 
             this.upload_from_server.Enabled = false;
-            this.upload_from_server.Location = new System.Drawing.Point(17, 97);
+            this.upload_from_server.Location = new System.Drawing.Point(17, 90);
             this.upload_from_server.Name = "upload_from_server";
             this.upload_from_server.Size = new System.Drawing.Size(210, 29);
             this.upload_from_server.TabIndex = 18;
@@ -218,7 +231,7 @@ namespace SWToR_RUS
             // 
             // upload_to_server
             // 
-            this.upload_to_server.Location = new System.Drawing.Point(17, 64);
+            this.upload_to_server.Location = new System.Drawing.Point(17, 62);
             this.upload_to_server.Name = "upload_to_server";
             this.upload_to_server.Size = new System.Drawing.Size(210, 28);
             this.upload_to_server.TabIndex = 17;
@@ -228,7 +241,7 @@ namespace SWToR_RUS
             // 
             // editor_btn
             // 
-            this.editor_btn.Location = new System.Drawing.Point(17, 168);
+            this.editor_btn.Location = new System.Drawing.Point(17, 149);
             this.editor_btn.Name = "editor_btn";
             this.editor_btn.Size = new System.Drawing.Size(210, 29);
             this.editor_btn.TabIndex = 1;
@@ -286,10 +299,11 @@ namespace SWToR_RUS
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.checkBox1);
             this.groupBox3.Controls.Add(this.dis_skills);
             this.groupBox3.Location = new System.Drawing.Point(6, 172);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(124, 43);
+            this.groupBox3.Size = new System.Drawing.Size(124, 64);
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Отключить перевод";
@@ -301,7 +315,7 @@ namespace SWToR_RUS
             this.dis_skills.Name = "dis_skills";
             this.dis_skills.Size = new System.Drawing.Size(66, 17);
             this.dis_skills.TabIndex = 0;
-            this.dis_skills.Text = "Умений";
+            this.dis_skills.Text = "Умения";
             this.dis_skills.UseVisualStyleBackColor = true;
             this.dis_skills.CheckedChanged += new System.EventHandler(this.dis_skills_CheckedChanged);
             // 
@@ -578,6 +592,16 @@ namespace SWToR_RUS
             this.steam_game.Text = "Steam";
             this.steam_game.UseVisualStyleBackColor = true;
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(6, 35);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(79, 17);
+            this.checkBox1.TabIndex = 1;
+            this.checkBox1.Text = "Предметы";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -674,6 +698,8 @@ namespace SWToR_RUS
         private System.Windows.Forms.CheckBox auto_translate;
         private System.Windows.Forms.CheckBox steam_game;
         private System.Windows.Forms.CheckBox changes;
+        private System.Windows.Forms.Button ins_font;
+        private System.Windows.Forms.CheckBox checkBox1;
     }
 }
 
