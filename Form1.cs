@@ -27,6 +27,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Interactions;
+using System.Web.UI;
 
 namespace SWToR_RUS
 {
@@ -120,6 +121,18 @@ namespace SWToR_RUS
                 if (ConfigurationManager.AppSettings["author"] == null) //Параметр, в котором хранится имя Автора перевода
                 {
                     Config.AppSettings.Settings.Add("author", "");
+                    Config.Save(ConfigurationSaveMode.Minimal);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+                if (ConfigurationManager.AppSettings["email"] == null) //Параметр, в котором хранится почта Автора перевода
+                {
+                    Config.AppSettings.Settings.Add("email", "");
+                    Config.Save(ConfigurationSaveMode.Minimal);
+                    ConfigurationManager.RefreshSection("appSettings");
+                }
+                if (ConfigurationManager.AppSettings["password"] == null) //Параметр, в котором хранится пароль Автора перевода
+                {
+                    Config.AppSettings.Settings.Add("password", "");
                     Config.Save(ConfigurationSaveMode.Minimal);
                     ConfigurationManager.RefreshSection("appSettings");
                 }
@@ -362,6 +375,8 @@ namespace SWToR_RUS
             stringBuilder.AppendLine("    <add key=\"a_translate\" value=\"0\" />");
             stringBuilder.AppendLine("    <add key=\"changes\" value=\"0\" />");
             stringBuilder.AppendLine("    <add key=\"author\" value=\"\" />");
+            stringBuilder.AppendLine("    <add key=\"password\" value=\"\" />");
+            stringBuilder.AppendLine("    <add key=\"email\" value=\"\" />");
             stringBuilder.AppendLine("    <add key=\"backup_row\" value=\"0\" />");
             stringBuilder.AppendLine("    <add key=\"row_updated_from_server\" value=\"23.08.2020 16:45:04\" />");
             stringBuilder.AppendLine("  </appSettings>");
@@ -978,7 +993,7 @@ namespace SWToR_RUS
                 if (dictionary_transl.ContainsKey(s["text_en"].ToString()))
                 {
 
-                            xml_text = "<key>" + s["key_unic"].ToString() + "</key><text_en>" + WebUtility.HtmlEncode(s["text_en"].ToString()) + "</text_en><text_ru_m transl=\"1\">" + WebUtility.HtmlEncode(dictionary_transl[s["text_en"].ToString()]) + "</text_ru_m><text_ru_w  transl=\"\"></text_ru_w>";
+                            xml_text = "<key>" + s["key_unic"].ToString() + "</key><text_en>" + WebUtility.HtmlEncode(s["text_en"].ToString()) + "</text_en><text_ru_m transl=\"1\">" + WebUtility.HtmlEncode(dictionary_transl[s["text_en"].ToString()]) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
 
 
 
@@ -1288,32 +1303,15 @@ namespace SWToR_RUS
                         }
                         if (jks % 4 == 0)
                         {
-                            if (text_ru_w_import != "") //
+                            if (text_ru_w_import == "") //
                             {
-                                if (translator_m_import != "Deepl" && translator_w_import != "Deepl")
-                                {
-                                    
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                }
-                                else if (translator_m_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "')";
-                                }
-                                else if (translator_w_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_w,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                }
+                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='NULL',translator_w=NULL WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='NULL')";
+                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','NULL','" + WebUtility.HtmlEncode(translator_m_import) + "','NULL')";
                             }
-                            else if (text_ru_m_import != "")
+                            else
                             {
-                                if (translator_m_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "')";
-                                }
+                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
                             }
                             MySqlCommand update = new MySqlCommand(sql_update, conn);
                             int numRowsUpdated = update.ExecuteNonQuery();
@@ -1408,12 +1406,29 @@ namespace SWToR_RUS
                         while (reader.Read())
                         {
                             if (reader["text_ru_m"].ToString() != "" && reader["text_ru_w"].ToString() != "")
-                                sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(reader["text_ru_m"].ToString()) + "',translator_m='" + WebUtility.HtmlEncode(reader["translator_m"].ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(reader["text_ru_w"].ToString()) + "',translator_w='" + WebUtility.HtmlEncode(reader["translator_w"].ToString()) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
+                                if (reader["translator_w"].ToString() == "")
+                                {
+                                    sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(reader["text_ru_m"].ToString()) + "',translator_m='" + WebUtility.HtmlEncode(reader["translator_m"].ToString()) + "',text_ru_w=NULL,translator_w=NULL WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
+                                }
+                                else
+                                {
+                                    sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(reader["text_ru_m"].ToString()) + "',translator_m='" + WebUtility.HtmlEncode(reader["translator_m"].ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(reader["text_ru_w"].ToString()) + "',translator_w='" + WebUtility.HtmlEncode(reader["translator_w"].ToString()) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
+                                }
+
                             else if (reader["text_ru_m"].ToString() != "")
                                 sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(reader["text_ru_m"].ToString()) + "',translator_m='" + WebUtility.HtmlEncode(reader["translator_m"].ToString()) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
                             else if (reader["text_ru_w"].ToString() != "")
-                                sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(reader["text_ru_w"].ToString()) + "',translator_w='" + WebUtility.HtmlEncode(reader["translator_w"].ToString()) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
-                            using (StreamWriter tmp_save = new StreamWriter("tmp\\server_update.xml", true, encoding: Encoding.UTF8))
+                            {
+                                if (reader["translator_w"].ToString() == "")
+                                {
+                                    sqllite_update = "UPDATE Translated SET text_ru_w=NULL,translator_w=NULL WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
+                                }
+                                else
+                                {
+                                    sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(reader["text_ru_w"].ToString()) + "',translator_w='" + WebUtility.HtmlEncode(reader["translator_w"].ToString()) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "';";
+                                }
+                            }
+                                using (StreamWriter tmp_save = new StreamWriter("tmp\\server_update.xml", true, encoding: Encoding.UTF8))
                             {
                                 tmp_save.WriteLine("<sql>" + sqllite_update + "</sql>");
                             }

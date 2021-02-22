@@ -685,7 +685,7 @@ namespace SWToR_RUS
         private System.Windows.Forms.RichTextBox info_trans;
         private System.Windows.Forms.Button editor_btn;
         private System.Windows.Forms.CheckBox dis_skills;
-        private System.Windows.Forms.PictureBox pictureBox1;
+/*        private System.Windows.Forms.PictureBox pictureBox1;*/
         private System.Windows.Forms.Button upload_to_server;
         private System.Windows.Forms.Button upload_from_server;
         private System.Windows.Forms.Button recover;
