@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="deletefromhosts" xml:space="preserve">
-    <value>Удаляем записи из hosts...</value>
-  </data>
   <data name="About" xml:space="preserve">
     <value>О программе</value>
   </data>
@@ -127,11 +124,18 @@
     <value>Похоже, установлен сторонний русификатор. Восстановите оригинальные файлы(swtor_en-us_global_1.tor и swtor_main_gfx_assets_1.tor), а затем попробуйте снова.
 (Подробнее – см. инструкцию)</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="swtor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\swtor1.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="reinstalling" xml:space="preserve">
     <value>Переустанавливаем...</value>
   </data>
   <data name="deleted" xml:space="preserve">
     <value>Русификатор удален</value>
+  </data>
+  <data name="WrongPath" xml:space="preserve">
+    <value>Неверный путь к папке с игрой!</value>
   </data>
   <data name="Done" xml:space="preserve">
     <value>Готово!</value>
@@ -139,11 +143,18 @@
   <data name="patchhosts" xml:space="preserve">
     <value>Патчим hosts...</value>
   </data>
-  <data name="noauto" xml:space="preserve">
-    <value>Автоматическое обновление отсутствует.</value>
+  <data name="outdatedfiles" xml:space="preserve">
+    <value>Похоже, клиент игры не обновлен. Необходимо обновить.(Подробнее – см. инструкцию)
+
+Можно продолжить установку, но в игре местами может отсутствовать текст.
+
+Продолжить?</value>
   </data>
   <data name="copyfiles" xml:space="preserve">
     <value>Делаем копию файлов...</value>
+  </data>
+  <data name="hostsalreadypatched" xml:space="preserve">
+    <value>Уже пропатчен.</value>
   </data>
   <data name="hostsnotfound" xml:space="preserve">
     <value>Файл отсутствует, пропускаем...</value>
@@ -160,24 +171,13 @@
   <data name="hostsblock" xml:space="preserve">
     <value>Нет доступа к файлу, пропускаем...</value>
   </data>
-  <data name="outdatedfiles" xml:space="preserve">
-    <value>Похоже, клиент игры не обновлен. Необходимо обновить.(Подробнее – см. инструкцию)
-
-Можно продолжить установку, но в игре местами может отсутствовать текст.
-
-Продолжить?</value>
+  <data name="noauto" xml:space="preserve">
+    <value>Автоматическое обновление отсутствует.</value>
   </data>
   <data name="gamesupdated" xml:space="preserve">
     <value>Похоже, игра и/или русификатор обновились. Не закрывайте это окно, русификатор сейчас переустановится и игра запустится автоматически.</value>
   </data>
-  <data name="hostsalreadypatched" xml:space="preserve">
-    <value>Уже пропатчен.</value>
-  </data>
-  <data name="WrongPath" xml:space="preserve">
-    <value>Неверный путь к папке с игрой!</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="swtor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\swtor1.jpg;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="deletefromhosts" xml:space="preserve">
+    <value>Удаляем записи из hosts...</value>
   </data>
 </root>
