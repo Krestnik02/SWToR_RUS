@@ -132,7 +132,11 @@ namespace SWToR_RUS
                                         Close();
                                     } else
                                     {
-                                        MessageBox.Show("Введен неверный пароль", "Авторизация", MessageBoxButtons.OK);
+                                        MessageBox.Show("Введены неверные авторизационные данные", "Авторизация", MessageBoxButtons.OK);
+                                        if (name.Enabled == false)
+                                        {
+                                            name.Enabled = true;
+                                        }
                                     }
                                 }
                                 row.Close();
@@ -148,6 +152,10 @@ namespace SWToR_RUS
                                     MessageBox.Show("Пользователь с такой почтой уже зарегистрирован", "Регистрация", MessageBoxButtons.OK);
                                     email.Clear();
                                     row2.Close();
+                                    if (name.Enabled == false)
+                                    {
+                                        name.Enabled = true;
+                                    }
                                 } else
                                 {
                                     row2.Close();
@@ -165,9 +173,15 @@ namespace SWToR_RUS
                                         MessageBox.Show("Вы успешно зарегистрированны " + name_box, "Авторизация", MessageBoxButtons.OK);
                                         appClosing = 10;
                                         Close();
+                                    } else if (name.Enabled == false)
+                                    {
+                                        name.Enabled = true;
                                     }
                                 }
                             }
+                        } else if (name.Enabled == false)
+                        {
+                            name.Enabled = true;
                         }
                         conn.Close();
                     }
@@ -175,10 +189,13 @@ namespace SWToR_RUS
                 {
                     MessageBox.Show("Вы не можете авторизоваться под этим именем", "Авторизация", MessageBoxButtons.OK);
                     if (name.Enabled == false)
+                    {
                         name.Enabled = true;
+                    }
                 }
             } else
             {
+                MessageBox.Show("Проверьте правильность заполнения поля \"Почта\"", "Авторизация", MessageBoxButtons.OK);
             }
             
         }
