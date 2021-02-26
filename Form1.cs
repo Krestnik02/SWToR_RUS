@@ -95,6 +95,24 @@ namespace SWToR_RUS
         public Form1()
         {
             InitializeComponent();
+
+            try { 
+                using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
+                {
+                    conn.Open();
+                    string sql = "SELECT DISTINCT name, email FROM users";
+                    MySqlCommand command = new MySqlCommand(sql, conn);
+                    MySqlDataReader row = command.ExecuteReader();
+                    conn.Close();
+
+                    editor_btn.Enabled = true;
+                }
+            } catch(Exception e)
+            {
+                MessageBox.Show("Не удалось соединиться с удалённой базой!", "Ошибка соединения", MessageBoxButtons.OK);
+            }
+
+
             App_Updater();
             if (is_run == 1)
             {
@@ -1267,6 +1285,8 @@ namespace SWToR_RUS
             string translator_m_import = "";
             string text_ru_w_import = "";
             string translator_w_import = "";
+            string soruce_m_import = "";
+            string soruce_w_import = "";
             string text_en_import = "";
             string sql_update = "";
             string sql_insert = "";
@@ -1287,43 +1307,51 @@ namespace SWToR_RUS
                     int jks = 1;
                     foreach (XmlNode childnode in xRoot1)
                     {
-                        if (childnode.Name == "key")
-                            key_import = childnode.InnerText;
-                        if (childnode.Name == "text_en")
-                            text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
-                        if (childnode.Name == "text_ru_m")
+                        //пытаемся заблокировать загрузку авторских строк
+                        if(childnode.Name == "soruce_m" || childnode.Name == "soruce_w")
                         {
-                            text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
-                        }
-                        if (childnode.Name == "text_ru_w")
+                            if (childnode.Name == "key")
+                                key_import = childnode.InnerText;
+                            if (childnode.Name == "text_en")
+                                text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
+                            if (childnode.Name == "text_ru_m")
+                            {
+                                text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            }
+                            if (childnode.Name == "text_ru_w")
+                            {
+                                text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            }
+                            if (jks % 4 == 0)
+                            {
+                                if (text_ru_w_import == "") //
+                                {
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='NULL',translator_w=NULL WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='NULL')";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','NULL','" + WebUtility.HtmlEncode(translator_m_import) + "','NULL')";
+                                }
+                                else
+                                {
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                }
+                                MySqlCommand update = new MySqlCommand(sql_update, conn);
+                                int numRowsUpdated = update.ExecuteNonQuery();
+                                if (numRowsUpdated == 0)
+                                {
+                                    MySqlCommand insert = new MySqlCommand(sql_insert, conn);
+                                    insert.ExecuteNonQuery();
+                                }
+                                num_edited_rows++;
+                                ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
+                            }
+                            jks++;
+                        } else
                         {
-                            text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            MessageBox.Show("Вы пытаетесь загрузить авторские строки перевода, пожалуйста обратитесь к администратору проекта", "Внимание", MessageBoxButtons.OK);
+                            break;
                         }
-                        if (jks % 4 == 0)
-                        {
-                            if (text_ru_w_import == "") //
-                            {
-                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='NULL',translator_w=NULL WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='NULL')";
-                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','NULL','" + WebUtility.HtmlEncode(translator_m_import) + "','NULL')";
-                            }
-                            else
-                            {
-                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                            }
-                            MySqlCommand update = new MySqlCommand(sql_update, conn);
-                            int numRowsUpdated = update.ExecuteNonQuery();
-                            if (numRowsUpdated == 0)
-                            {
-                                MySqlCommand insert = new MySqlCommand(sql_insert, conn);
-                                insert.ExecuteNonQuery();
-                            }
-                            num_edited_rows++;
-                            ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
-                        }
-                        jks++;
                     }
                 }
                 conn.Close();

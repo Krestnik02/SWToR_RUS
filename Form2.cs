@@ -43,11 +43,19 @@ namespace SWToR_RUS
 
         public string buffer_w = "";
 
-        public List<string> data = new List<string>();
+        public string email = "";
+
+        public List<string> data_name = new List<string>();
+
+        public List<string> data_email = new List<string>();
 
         public List<string> source_list_m = new List<string>();
 
         public List<string> source_list_w = new List<string>();
+
+        public List<string> source_list_m_author = new List<string>();
+
+        public List<string> source_list_w_author = new List<string>();
 
         public string connStr_mysql = "server=" + "195.234.5.250" + //Адрес сервера (для локальной базы пишите "localhost")
                     ";user=" + "swtor" + //Имя пользователя
@@ -104,7 +112,7 @@ namespace SWToR_RUS
             using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
             {
                 conn.Open();
-                string sql = "SELECT DISTINCT name FROM users";
+                string sql = "SELECT DISTINCT name, email FROM users";
                 MySqlCommand command = new MySqlCommand(sql, conn);
                 MySqlDataReader row = command.ExecuteReader();
 
@@ -112,7 +120,8 @@ namespace SWToR_RUS
                 {
                     while (row.Read())
                     {
-                        data.Add(row["name"].ToString());
+                        data_name.Add(row["name"].ToString());
+                        data_email.Add(row["email"].ToString());
                     }
                     row.Close();
                 }
@@ -133,7 +142,7 @@ namespace SWToR_RUS
                     using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
                     {
                         conn.Open();
-                        string sql = "SELECT id, email, name, pass FROM users WHERE email='" + configuration.AppSettings.Settings["email"].Value + "' AND name ='" + configuration.AppSettings.Settings["author"].Value + "'";
+                        string sql = "SELECT email, name, pass FROM users WHERE email='" + configuration.AppSettings.Settings["email"].Value + "' AND name ='" + configuration.AppSettings.Settings["author"].Value + "'";
                         MySqlCommand command = new MySqlCommand(sql, conn);
                         MySqlDataReader row = command.ExecuteReader();
                         if (row.HasRows)
@@ -159,6 +168,9 @@ namespace SWToR_RUS
                                         file_to_trans.Items.Add(r["fileinfo"].ToString());
                                     r.Close();
                                     sqlite_conn.Close();
+                                } else
+                                {
+                                    MessageBox.Show("Проверьте конфигурационный файл, очистите значения авторизационных данных и авторизируйтесь заново", "Ошибка авторизации", MessageBoxButtons.OK);
                                 }
                             }
                             row.Close();
@@ -202,6 +214,8 @@ namespace SWToR_RUS
                         string sql_insert_part2 = "";
                         source_list_m.Clear();
                         source_list_w.Clear();
+                        source_list_m_author.Clear();
+                        source_list_w_author.Clear();
                         data_trans_file.Rows.Clear();
                         /*List<string> list_translators = new List<string>();*/
                         SQLiteConnection sqlite_conn;
@@ -261,7 +275,13 @@ namespace SWToR_RUS
             {
                 using (StreamWriter file_for_exam = new StreamWriter(file, true, encoding: Encoding.UTF8))
                 {
-                    xml_text = "<rezult>";
+                    if(status == 0)
+                    {
+                        xml_text = "<rezult_author>";
+                    } else
+                    {
+                        xml_text = "<rezult>";
+                    }
                     file_for_exam.WriteLine(xml_text);
                 }
             }
@@ -302,56 +322,91 @@ namespace SWToR_RUS
                                 //если пытается изменить авторский перевод
                                 if (status == 0)
                                 {
-                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                    //создание папки export, если ее нет
+                                    if (!Directory.Exists("export"))
                                     {
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w><soruce_m>" + WebUtility.HtmlEncode(source_list_m[e.RowIndex]) + "</soruce_m><soruce_w>" + WebUtility.HtmlEncode(source_list_w[e.RowIndex]) + "</soruce_w>";
+                                        Directory.CreateDirectory("export");
                                     }
-                                    else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+
+                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
                                     {
                                         xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w><soruce_m>" + WebUtility.HtmlEncode(source_list_m[e.RowIndex]) + "</soruce_m><soruce_w>" + WebUtility.HtmlEncode(source_list_w[e.RowIndex]) + "</soruce_w>";
+
+                                        row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
                                     }
                                     else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
                                     {
                                         xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w><soruce_m>" + WebUtility.HtmlEncode(source_list_m[e.RowIndex]) + "</soruce_m><soruce_w>" + WebUtility.HtmlEncode(source_list_w[e.RowIndex]) + "</soruce_w>";
+
+                                        row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
                                     }
                                 }
                                 else if (status == 1)
                                 {
                                     if (Convert.ToString(row.Cells["text_ru_w"].Value) == "" && authorization == true)
                                     {
-                                        if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                        {
-                                            sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w=NULL,translator_m='" + WebUtility.HtmlEncode(new_author.Text) + "',translator_w=NULL WHERE key_unic ='" + name + "'";
-                                            xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
-                                        }
-                                        else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+                                        if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
                                         {
                                             sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
                                             xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
+
+                                            row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
                                         }
                                         else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
                                         {
                                             sql_insert = "UPDATE Translated SET text_ru_w=NULL,translator_w=NULL WHERE key_unic ='" + name + "'";
                                             xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
+
+                                            row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
                                         }
                                     }
                                     else
                                     {
-                                        if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                        {
-                                            sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_author.Text) + "',translator_w='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
-                                            xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
-                                        }
-                                        else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
+                                        if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
                                         {
                                             sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
                                             xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+
+                                            row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
                                         }
                                         else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
                                         {
                                             sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_w='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
                                             xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+
+                                            row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
                                         }
+                                    }
+                                }
+
+                                //редактируем строки, есть соседняя строка авторская
+                                else if (status == 2)
+                                {
+                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString() == "2")
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "', translator_m='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(source_list_w_author[e.RowIndex]) + "\">" + WebUtility.HtmlEncode(source_list_w[e.RowIndex]) + "</text_ru_w>";
+
+                                        row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                        row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                    }
+                                    else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo"].Value.ToString() == "2")
+                                    {
+                                        sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "', translator_w='" + WebUtility.HtmlEncode(new_author.Text) + "' WHERE key_unic ='" + name + "'";
+                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(source_list_m_author[e.RowIndex]) + "\">" + WebUtility.HtmlEncode(source_list_m[e.RowIndex]) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_author.Text) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+
+                                        row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
+                                        row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
+                                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
                                     }
                                 }
 
@@ -364,8 +419,6 @@ namespace SWToR_RUS
                                 xml_text = "";
                             });
 
-                            row.Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
-                            row.Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
                         }
                         progressBar_text.Invoke((MethodInvoker)(() => progressBar_text.Value += 1));
                         list_keys.Clear();
@@ -378,16 +431,23 @@ namespace SWToR_RUS
 
             using (StreamWriter file_for_exam = new StreamWriter(file, true, encoding: Encoding.UTF8))
             {
-                file_for_exam.WriteLine("</rezult>");
+                if (status == 0)
+                {
+                    file_for_exam.WriteLine("</rezult_author>");
+                }
+                else
+                {
+                    file_for_exam.WriteLine("</rezult>");
+                }
             }
-            data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
-            data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
         }
 
         public void data_trans_file_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             int alert_m = 0;
             int alert_w = 0;
+            int alert_m_near = 0;
+            int alert_w_near = 0;
 
             //проверяем на изменения с исходной строкой, если нет значит строка сделана им в этой сессии! Что бы не выводить ошибку, если он ввел текст, а потом удалил свой же
             if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) == ""
@@ -428,37 +488,46 @@ namespace SWToR_RUS
             {
                 data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
 
-                for (int i = 0; i < data.Count; i++)
+                for (int i = 0; i < data_name.Count; i++)
                 {
-                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == data[i].ToString()
+                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == data_name[i].ToString()
                         && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != new_author.Text.ToString())
                     {
                         alert_m = 1;
+                        email = data_email[i];
                     }
                 }
 
-                //проверяем наша ли это строка или Deepl
-                if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == new_author.Text.ToString()
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "Deepl"
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "")
+                for (int i = 0; i < data_name.Count; i++)
+                {
+                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == data_name[i].ToString()
+                        && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != new_author.Text.ToString())
+                    {
+                        alert_m_near = 1;
+                    }
+                }
+
+                if (alert_m_near == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != "") //проверяем если автор соседней строки авторизован
                 {
                     if (e.ColumnIndex == 2)
                     {
                         data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
+                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "2"; //помечаем соседнюю строку, как авторскую
                     }
 
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
+                    data_upload_trans(e, 2, "", "1", "user_translation\\user_translation.xml");
                 }
+
                 else if (alert_m == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != "") //проверяем если автор этой м строки авторизован
                 {
                     if (e.ColumnIndex == 2)
                         data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "2"; //помечаем строку, как строку которая внесена авторизированным автором
 
                     /* Заносим эти строки в отдельный файл */
-                    DialogResult dialogResult = MessageBox.Show(alert_m + "ВНИМАНИЕ! Вы пытаетесь изменить строку перевода авторизированного автора, он будет уведомлен об этом, кроме того информация внесенная вами не будет загружена на сервер до его согласия на изменение, применить изменения?", "Внимание", MessageBoxButtons.YesNo);
+                    DialogResult dialogResult = MessageBox.Show("Вы желаете изменить строку перевода авторизированного автора? Выберите \"Да\", если желате отправить автоматическое сообщение по завершению работы программы для уведомления его об этом", "Внимание", MessageBoxButtons.YesNo);
                     if (dialogResult == DialogResult.Yes)
                     {
-                        data_upload_trans(e, 0, "", "2", "export\\error.xml");
+                        data_upload_trans(e, 0, "", "2", "export\\error_" + email + ".xml");
                     }
                     else
                     {
@@ -471,7 +540,19 @@ namespace SWToR_RUS
 
                     alert_m = 0;
                 }
-                else
+                //проверяем наша ли это строка или Deepl
+                else if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == new_author.Text.ToString()
+                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "Deepl"
+                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "")
+                {
+                    if (e.ColumnIndex == 2)
+                    {
+                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
+                    }
+
+                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
+                }
+                else 
                 {
                     if (e.ColumnIndex == 2)
                     {
@@ -488,37 +569,46 @@ namespace SWToR_RUS
             {
                 data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
 
-                for (int i = 0; i < data.Count; i++)
+                for (int i = 0; i < data_name.Count; i++)
                 {
-                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == data[i].ToString()
+                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == data_name[i].ToString()
                         && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != new_author.Text.ToString())
                     {
                         alert_w = 1;
+                        email = data_email[i];
                     }
                 }
 
-                //проверяем наша ли это строка или Deepl
-                if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == new_author.Text.ToString()
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "Deepl"
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "")
+                for (int i = 0; i < data_name.Count; i++)
+                {
+                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == data_name[i].ToString()
+                        && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != new_author.Text.ToString())
+                    {
+                        alert_w_near = 1;
+                    }
+                }
+
+                if (alert_w_near == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != "") //проверяем если автор соседней строки авторизован
                 {
                     if (e.ColumnIndex == 3)
                     {
                         data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
+                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "2"; //помечаем соседнюю строку, как авторскую
                     }
-
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
+                    MessageBox.Show("test");
+                    data_upload_trans(e, 2, "", "1", "user_translation\\user_translation.xml");
                 }
+
                 else if (alert_w == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != "") //проверяем если автор этой ж строки авторизован
                 {
                     if (e.ColumnIndex == 3)
                         data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "2"; //помечаем строку, как строку которая внесена авторизированным автором
 
                     /* Заносим эти строки в отдельный файл */
-                    DialogResult dialogResult = MessageBox.Show(alert_w + "ВНИМАНИЕ! Вы пытаетесь изменить строку перевода авторизированного автора, он будет уведомлен об этом, кроме того информация внесенная вами не будет загружена на сервер до его согласия на изменение, применить изменения?", "Внимание", MessageBoxButtons.YesNo);
+                    DialogResult dialogResult = MessageBox.Show("Вы желаете изменить строку перевода авторизированного автора? Выберите \"Да\", если желате отправить автоматическое сообщение по завершению работы программы для уведомления его об этом", "Внимание", MessageBoxButtons.YesNo);
                     if (dialogResult == DialogResult.Yes)
                     {
-                        data_upload_trans(e, 0, "", "2", "export\\error.xml");
+                        data_upload_trans(e, 0, "", "2", "export\\error_" + email + ".xml");
                     }
                     else
                     {
@@ -531,7 +621,19 @@ namespace SWToR_RUS
 
                     alert_w = 0;
                 }
-                else
+                //проверяем наша ли это строка или Deepl
+                else if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == new_author.Text.ToString()
+                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "Deepl"
+                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "")
+                {
+                    if (e.ColumnIndex == 3)
+                    {
+                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
+                    }
+
+                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
+                }
+                else 
                 {
                     if (e.ColumnIndex == 3)
                     {
@@ -541,20 +643,6 @@ namespace SWToR_RUS
                     /* Заносим эти строки в отдельный файл */
                     data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
                 }
-            } else
-            {
-                if (e.ColumnIndex == 2)
-                {
-                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
-                }
-
-                if (e.ColumnIndex == 3)
-                {
-                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
-                }
-
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-                data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
             }
         }
 
@@ -781,6 +869,8 @@ namespace SWToR_RUS
                 {
                     source_list_m.Clear();
                     source_list_w.Clear();
+                    source_list_m_author.Clear();
+                    source_list_w_author.Clear();
                     data_trans_file.Rows.Clear();
                     string sql_insert_part2 = "";
                     string sql_insert_part3 = "";
@@ -899,6 +989,9 @@ namespace SWToR_RUS
                                 source_list_m.Add(WebUtility.HtmlDecode(r["text_ru_m"].ToString()));
                                 source_list_w.Add(WebUtility.HtmlDecode(r["text_ru_w"].ToString()));
 
+                                source_list_m_author.Add(WebUtility.HtmlDecode(r["translator_m"].ToString()));
+                                source_list_w_author.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));
+
                                 /*if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_m"].ToString())))
                                     list_translators.Add(WebUtility.HtmlDecode(r["translator_m"].ToString()));
                                 if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_w"].ToString())))
@@ -980,6 +1073,8 @@ namespace SWToR_RUS
             file_to_trans.Items.Clear();
             source_list_m.Clear();
             source_list_w.Clear();
+            source_list_m_author.Clear();
+            source_list_w_author.Clear();
             data_trans_file.Rows.Clear();
             string sql_insert;
             SQLiteConnection sqlite_conn;
@@ -1093,56 +1188,49 @@ namespace SWToR_RUS
                 search_filename.Enabled = false;
             }
         }
+        private AlternateView Mail_Body()
+        {
+            LinkedResource Img = new LinkedResource("Resources\\swtor.jpg", MediaTypeNames.Image.Jpeg);
+            Img.ContentId = "logo";
+            string str = @"<body><img src=cid:logo width='150' height='150' alt='Logo'/>
+                    <p>Здраствуйте участник проекта <b>SWToR RUS</b>! Это письмо отправлено Вам, так как ваш перевод хотят изменить.<br /><br />
+                    Пожалуйста воспользуйтесь редактором перевода <b>SWToR RUS</b> для внесения изменений, если вы посчитаете их нужными.
+                    <br /><br />Это письмо отправленно автоматически, пожалуйста не отвечайте на него.
+                    <p>С теплыми пожеланиями, <b>SWTOR RUS COMMUNITY</b></p></p></body>";
+            AlternateView AV = AlternateView.CreateAlternateViewFromString(str, null, MediaTypeNames.Text.Html);
+            AV.LinkedResources.Add(Img);
+            return AV;
+        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if(File.Exists("export\\error.xml"))
+
+            string[] allfiles = Directory.GetFiles("export\\", "*", SearchOption.AllDirectories);
+            string[] stringSeparators = new string[] { "export\\error_", ".xml" };
+
+            for (int i = 0; i < allfiles.Length; i++)
             {
-                // Give the LinkedResource an ID which should be passed into the 'cid' of the <img> tag -
-                var sb = new StringBuilder("");
-                sb.Append("<body>");
-                sb.Append($"<img src=\"cid:logo\" width=\"150\" height=\"150\" alt=\"Logo\"/>");
-                sb.Append("<p>Здраствуйте участник проекта <b>SWToR_RUS</b>! Это письмо отправлено Вам так как ваш перевод хотели изменить.<br /><br />");
-                sb.Append("Пожалуйста воспользуйтесь редактором перевода для внесения изменений, если вы посчитаете их нужными.");
-                sb.Append("<br /><br />Это письмо отправленно автоматически, пожалуйста не отвечайте на него");
-                sb.Append("</p></body>");
-                var emailBodyHtml = sb.ToString();
-                var emailBodyPlain = "This is the plain text email body";
-
-                using (var message = new MailMessage())
-                using (var logoMemStream = new MemoryStream())
-                using (var altViewHtml = AlternateView.CreateAlternateViewFromString(emailBodyHtml, null, MediaTypeNames.Text.Html))
-                using (var altViewPlainText = AlternateView.CreateAlternateViewFromString(emailBodyPlain, null, MediaTypeNames.Text.Plain))
-                using (var client = new SmtpClient("smtp.yandex.com")
+                try
                 {
-                    Port = 25,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential("swtorrus-community@yandex.ru", "sAq12w#$%"),
-                    EnableSsl = false
-                })
-                {
-                    message.To.Add(new MailAddress("super.gird2012@yandex.ru"));
-                    message.From = new MailAddress("swtorrus-community@yandex.ru", "SWToR_RUS COMMUNITY");
-                    message.Attachments.Add(new Attachment("export\\error.xml"));
+                    SmtpClient client = new SmtpClient();
+                    client.Host = "smtp.gmail.com";
+                    client.Port = 587;
+                    client.EnableSsl = true;
+                    client.UseDefaultCredentials = false;
+                    client.Credentials = new NetworkCredential("swtor2com@gmail.com", "sAq12w#$%");
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    MailMessage message = new MailMessage();
+                    message.From = new MailAddress("swtor2com@gmail.com", "SWToR_RUS COMMUNITY");
+                    message.To.Add(new MailAddress(string.Join("", allfiles[i].Split(stringSeparators, StringSplitOptions.RemoveEmptyEntries))));
                     message.Subject = "Ваши строчки перевода хотят изменить";
-                    /*message.IsBodyHtml = true;*/
+                    message.Attachments.Add(new Attachment(allfiles[i].ToString()));
+                    message.AlternateViews.Add(Mail_Body());
+                    client.Send(message);
 
-                    // Assume that GetLogo() just returns a Bitmap (for my particular problem I had to return a logo in a specified colour, hence the hexColour parameter!)
-                    byte[] reader = File.ReadAllBytes("Resources\\swtor.jpg");
-                    MemoryStream image1 = new MemoryStream(reader);
-                    logoMemStream.Position = 0;
-
-                    using (LinkedResource logoLinkedResource = new LinkedResource(logoMemStream))
-                    {
-                        logoLinkedResource.ContentId = "logo";
-                        logoLinkedResource.ContentType = new ContentType("image/jpeg");
-                        altViewHtml.LinkedResources.Add(logoLinkedResource);
-                        message.AlternateViews.Add(altViewHtml);
-                        message.AlternateViews.Add(altViewPlainText);
-                        //Доделать тут
-                        client.Send(message);
-                    }
+                }
+                catch(SmtpFailedRecipientException ex)
+                {
+                    MessageBox.Show(ex + "\n" + "Пожалуйста предоставьте скриншот с данным сообщением администратору проекта", "Ошибка", MessageBoxButtons.OK);
                 }
             }
 
@@ -1162,6 +1250,8 @@ namespace SWToR_RUS
         {
             source_list_m.Clear();
             source_list_w.Clear();
+            source_list_m_author.Clear();
+            source_list_w_author.Clear();
             data_trans_file.Rows.Clear();
             page_lst.Enabled = false;
             upload_translate.Enabled = false;
@@ -1232,6 +1322,12 @@ namespace SWToR_RUS
                 sqlite_conn.Close();
             }                    
         }
+        public void delete_xml_trash(XmlNode Key)
+        {
+            /*Доделать*/
+            /*XmlElement KeyElement = (XmlElement)Key;
+            KeyElement.InnerText = */
+        }
 
         private void export_Click(object sender, EventArgs e)
         {
@@ -1239,6 +1335,13 @@ namespace SWToR_RUS
             {
                 Directory.CreateDirectory("export");
             }
+
+            //формируем запрос
+            string join = String.Join("' , '", data_name.Cast<string>()
+                                 .Where(c => !string.IsNullOrWhiteSpace(c))
+                                 .Distinct());
+
+            MessageBox.Show(join.ToString(), "Внимание", MessageBoxButtons.OK);
 
             SaveFileDialog saveFileDialog1 = new SaveFileDialog();
 
@@ -1254,7 +1357,10 @@ namespace SWToR_RUS
                 sqlite_conn.Open();
                 SQLiteCommand sqlite_cmd;
                 sqlite_cmd = sqlite_conn.CreateCommand();
-                string sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "' ORDER BY ID";
+
+                //выгружаем строки только неавторизированных авторов
+                string sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "' AND " +
+                    "(translator_m NOT IN ('" + join + "') AND (translator_w NOT IN ('" + join + "') OR translator_w IS NULL)) ORDER BY ID";
                 sqlite_cmd.CommandText = sql_insert;
                 SQLiteDataReader r = sqlite_cmd.ExecuteReader();
                 using (StreamWriter file_for_exam =
@@ -1427,7 +1533,6 @@ namespace SWToR_RUS
                     file_to_trans.Items.Add(r["fileinfo"].ToString());
                 r.Close();
                 sqlite_conn.Close();
-                Data.Value = "";
             }
         }
     }

@@ -47,7 +47,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.lst_font = new System.Windows.Forms.ComboBox();
             this.fileinfo_user = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.new_author = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -77,6 +76,7 @@
             this.My_translate = new System.Windows.Forms.CheckBox();
             this.auth = new System.Windows.Forms.Button();
             this.author_ok = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.data_trans_file)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -180,7 +180,7 @@
             this.file_to_trans.FormattingEnabled = true;
             this.file_to_trans.Location = new System.Drawing.Point(199, 6);
             this.file_to_trans.Name = "file_to_trans";
-            this.file_to_trans.Size = new System.Drawing.Size(523, 21);
+            this.file_to_trans.Size = new System.Drawing.Size(328, 21);
             this.file_to_trans.TabIndex = 1;
             this.file_to_trans.SelectedIndexChanged += new System.EventHandler(this.file_to_trans_SelectedIndexChanged);
             // 
@@ -226,7 +226,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(303, 123);
+            this.label3.Location = new System.Drawing.Point(147, 126);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(88, 13);
             this.label3.TabIndex = 7;
@@ -247,9 +247,9 @@
             "14",
             "15",
             "16"});
-            this.lst_font.Location = new System.Drawing.Point(397, 120);
+            this.lst_font.Location = new System.Drawing.Point(238, 123);
             this.lst_font.Name = "lst_font";
-            this.lst_font.Size = new System.Drawing.Size(46, 21);
+            this.lst_font.Size = new System.Drawing.Size(59, 21);
             this.lst_font.TabIndex = 9;
             this.lst_font.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
@@ -263,20 +263,10 @@
             this.fileinfo_user.Visible = false;
             this.fileinfo_user.TextChanged += new System.EventHandler(this.fileinfo_user_TextChanged);
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 75);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(92, 13);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Название файла";
-            this.label4.Visible = false;
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 99);
+            this.label5.Location = new System.Drawing.Point(12, 76);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(88, 13);
             this.label5.TabIndex = 12;
@@ -284,10 +274,10 @@
             // 
             // new_author
             // 
-            this.new_author.Location = new System.Drawing.Point(110, 95);
+            this.new_author.Location = new System.Drawing.Point(110, 72);
             this.new_author.MaxLength = 16;
             this.new_author.Name = "new_author";
-            this.new_author.Size = new System.Drawing.Size(230, 20);
+            this.new_author.Size = new System.Drawing.Size(187, 20);
             this.new_author.TabIndex = 13;
             this.new_author.Text = "Напишите своё имя или оставьте как есть";
             this.new_author.Click += new System.EventHandler(this.new_author_Click);
@@ -295,7 +285,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 123);
+            this.label6.Location = new System.Drawing.Point(12, 102);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 13);
             this.label6.TabIndex = 14;
@@ -306,7 +296,7 @@
             this.page_lst.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.page_lst.Enabled = false;
             this.page_lst.FormattingEnabled = true;
-            this.page_lst.Location = new System.Drawing.Point(67, 120);
+            this.page_lst.Location = new System.Drawing.Point(67, 99);
             this.page_lst.Name = "page_lst";
             this.page_lst.Size = new System.Drawing.Size(64, 21);
             this.page_lst.TabIndex = 15;
@@ -315,7 +305,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(134, 123);
+            this.label7.Location = new System.Drawing.Point(134, 102);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(101, 13);
             this.label7.TabIndex = 16;
@@ -332,7 +322,7 @@
             "100",
             "500",
             "1000"});
-            this.colrowonpage.Location = new System.Drawing.Point(238, 120);
+            this.colrowonpage.Location = new System.Drawing.Point(238, 99);
             this.colrowonpage.Name = "colrowonpage";
             this.colrowonpage.Size = new System.Drawing.Size(59, 21);
             this.colrowonpage.TabIndex = 17;
@@ -500,7 +490,7 @@
             // export
             // 
             this.export.Enabled = false;
-            this.export.Location = new System.Drawing.Point(728, 4);
+            this.export.Location = new System.Drawing.Point(533, 5);
             this.export.Name = "export";
             this.export.Size = new System.Drawing.Size(97, 23);
             this.export.TabIndex = 30;
@@ -580,7 +570,7 @@
             // 
             // auth
             // 
-            this.auth.Location = new System.Drawing.Point(574, 70);
+            this.auth.Location = new System.Drawing.Point(356, 70);
             this.auth.Name = "auth";
             this.auth.Size = new System.Drawing.Size(171, 47);
             this.auth.TabIndex = 37;
@@ -590,13 +580,23 @@
             // 
             // author_ok
             // 
-            this.author_ok.Location = new System.Drawing.Point(346, 95);
+            this.author_ok.Location = new System.Drawing.Point(303, 71);
             this.author_ok.Name = "author_ok";
             this.author_ok.Size = new System.Drawing.Size(47, 21);
             this.author_ok.TabIndex = 38;
             this.author_ok.Text = "ОК";
             this.author_ok.UseVisualStyleBackColor = true;
             this.author_ok.Click += new System.EventHandler(this.author_ok_Click);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(12, 75);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(92, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Название файла";
+            this.label4.Visible = false;
             // 
             // Form2
             // 
@@ -634,6 +634,7 @@
             this.Controls.Add(this.data_trans_file);
             this.Controls.Add(this.groupBox2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(1100, 600);
             this.Name = "Form2";
             this.Text = "Редактор - Не Авторизирован";
             this.Activated += new System.EventHandler(this.Form2_Activated);
@@ -658,7 +659,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox lst_font;
         private System.Windows.Forms.TextBox fileinfo_user;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox new_author;
         private System.Windows.Forms.DataGridViewTextBoxColumn key;
@@ -696,5 +696,6 @@
         private System.Windows.Forms.CheckBox My_translate;
         private System.Windows.Forms.Button auth;
         private System.Windows.Forms.Button author_ok;
+        private System.Windows.Forms.Label label4;
     }
 }
