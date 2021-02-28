@@ -65,6 +65,7 @@ namespace SWToR_RUS
             this.ChooseMen = new System.Windows.Forms.RadioButton();
             this.ChooseWomen = new System.Windows.Forms.RadioButton();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.dis_skills = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.ChooseSit = new System.Windows.Forms.RadioButton();
@@ -92,7 +93,6 @@ namespace SWToR_RUS
             this.Updater = new System.Windows.Forms.Label();
             this.Update_app = new System.Windows.Forms.LinkLabel();
             this.steam_game = new System.Windows.Forms.CheckBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -241,6 +241,7 @@ namespace SWToR_RUS
             // 
             // editor_btn
             // 
+            this.editor_btn.Enabled = false;
             this.editor_btn.Location = new System.Drawing.Point(17, 149);
             this.editor_btn.Name = "editor_btn";
             this.editor_btn.Size = new System.Drawing.Size(210, 29);
@@ -307,6 +308,16 @@ namespace SWToR_RUS
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Отключить перевод";
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(6, 35);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(79, 17);
+            this.checkBox1.TabIndex = 1;
+            this.checkBox1.Text = "Предметы";
+            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // dis_skills
             // 
@@ -591,16 +602,6 @@ namespace SWToR_RUS
             this.steam_game.TabIndex = 20;
             this.steam_game.Text = "Steam";
             this.steam_game.UseVisualStyleBackColor = true;
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(6, 35);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(79, 17);
-            this.checkBox1.TabIndex = 1;
-            this.checkBox1.Text = "Предметы";
-            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 

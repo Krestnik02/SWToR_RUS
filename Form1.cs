@@ -80,7 +80,7 @@ namespace SWToR_RUS
 
         public string stjk;
 
-        public uint hash_g;        
+        public uint hash_g;
 
         public string my_filename;
 
@@ -95,6 +95,24 @@ namespace SWToR_RUS
         public Form1()
         {
             InitializeComponent();
+
+            try { 
+                using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
+                {
+                    conn.Open();
+                    string sql = "SELECT DISTINCT name, email FROM users";
+                    MySqlCommand command = new MySqlCommand(sql, conn);
+                    MySqlDataReader row = command.ExecuteReader();
+                    conn.Close();
+
+                    editor_btn.Enabled = true;
+                }
+            } catch(Exception e)
+            {
+                MessageBox.Show("Не удалось соединиться с удалённой базой!" + e.Message, "Ошибка соединения", MessageBoxButtons.OK);
+            }
+
+
             App_Updater();
             if (is_run == 1)
             {
@@ -195,7 +213,7 @@ namespace SWToR_RUS
                                 }
                                 else
                                     LogBox.AppendText("Hash не совпадает. Проведите переустановку русификатора.\n");
-                            }                            
+                            }
                         }
                         if (steam_game.Checked == true && launch_status == 1 && RusInstalled == 1) //Если версия Steam, Лаунчер запушен и русификатор установлен
                             Steam_Rename();
@@ -426,7 +444,7 @@ namespace SWToR_RUS
                 {
                     patch.ConnectDB(); //Патчим файлы
                 });
-                LogBox.AppendText(Properties.Resources.Done + "\n");                
+                LogBox.AppendText(Properties.Resources.Done + "\n");
                 Config.AppSettings.Settings["firstrun"].Value = "0";
                 Config.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
@@ -627,7 +645,7 @@ namespace SWToR_RUS
             upload_to_server.Enabled = false;
             upload_from_server.Enabled = false;
             recover.Enabled = false;
-            editor_btn.Enabled = false;            
+            editor_btn.Enabled = false;
             LogBox.AppendText(Properties.Resources.deletefiles);
             try
             {
@@ -667,7 +685,7 @@ namespace SWToR_RUS
                 }
                 catch (Exception)
                 {
-                }                
+                }
             }
             Config.AppSettings.Settings["firstrun"].Value = "1";
             Config.Save(ConfigurationSaveMode.Modified);
@@ -723,14 +741,6 @@ namespace SWToR_RUS
                 sqlite_conn.Close();
             }
 
-
-
-
-
-
-
-
-
             /*
             string line;
             using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
@@ -759,8 +769,6 @@ namespace SWToR_RUS
                 }
                 sqlite_conn.Close();
             }
-
-
 
                     //-------------------------гугл переводчик-------------------- -
                     using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
@@ -941,10 +949,6 @@ namespace SWToR_RUS
                                         }
                                         count_links++;
                                     }
-
-
-
-
                                 }
                             }
                         }
@@ -958,8 +962,6 @@ namespace SWToR_RUS
 
             //string translated = start.Substring(0, start.IndexOf("</div>"));
             //--------------------------------------------------------------------
-
-
 
             /*
             Dictionary<string, string> dictionary_transl = new Dictionary<string, string>();
@@ -977,10 +979,6 @@ namespace SWToR_RUS
                     dictionary_transl.Add(r["text_en"].ToString(), r["text_ru_m"].ToString());
             }
             r.Close();
-
-
-
-
 
             string xml_text = "";
             sql_insert = "SELECT * FROM Translated WHERE translator_m=='3'";
@@ -1005,9 +1003,6 @@ namespace SWToR_RUS
                         }
                         //Console.WriteLine(s["text_ru_m"].ToString()); 
                         isd++;
-
-
-
                          }
             }
             Console.WriteLine(isd);
@@ -1026,7 +1021,7 @@ namespace SWToR_RUS
             string start = responseFromServer.Substring(responseFromServer.IndexOf("class=\"t0\"") + 11);
 
             string translated = start.Substring(0, start.IndexOf("</div>"));
-            //--------------------------------------------------------------------  
+            //--------------------------------------------------------------------
 
              // stb JKC чтение------------------------------ 
              * Dictionary<ulong, string> dictionary_xml_files = new Dictionary<ulong, string>();
@@ -1042,7 +1037,7 @@ namespace SWToR_RUS
                  BinaryReader binaryReader = new BinaryReader(fileStream);
                  byte value5 = binaryReader.ReadByte();
                  byte value3 = binaryReader.ReadByte();
-                 int value4 = binaryReader.ReadByte();// numStrings     
+                 int value4 = binaryReader.ReadByte();// numStrings
                  int numStrings = binaryReader.ReadInt32();
                  int num3 = 0;
                  while (num3 < numStrings)
@@ -1092,7 +1087,7 @@ namespace SWToR_RUS
                 BinaryReader binaryReader = new BinaryReader(fileStream);
                 byte value5 = binaryReader.ReadByte();
                 byte value3 = binaryReader.ReadByte();
-                int value4 = binaryReader.ReadByte();// numStrings     
+                int value4 = binaryReader.ReadByte();// numStrings
                 int numStrings = binaryReader.ReadInt32();
                 int num3 = 0;
                 while (num3 < numStrings)
@@ -1122,13 +1117,13 @@ namespace SWToR_RUS
                         if (dictionary_stb.ContainsKey(id + id2))
                             jddsd = 1;
                         else
-                            dictionary_stb.Add(id + id2, text);                        
+                            dictionary_stb.Add(id + id2, text);
                     }
                     binaryReader.BaseStream.Position = position;
                     num3++;
                 }
                 binaryReader.Close();
-                fileStream.Close();               
+                fileStream.Close();
             */
             /*   xml-----------------
                     Dictionary<ulong, string> dictionary_xml_m = new Dictionary<ulong, string>();
@@ -1150,11 +1145,11 @@ namespace SWToR_RUS
                         if (childnode.Name == "hash")
                             hash_g = UInt32.Parse(childnode.InnerText);
                         if (childnode.Name == "key")
-                            vOut = UInt64.Parse(childnode.InnerText);                        
+                            vOut = UInt64.Parse(childnode.InnerText);
                         if (childnode.Name == "text_ru_m")
                         {
                             text_ru_m = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_m=childnode.Attributes.GetNamedItem("transl").Value;                            
+                            translator_m=childnode.Attributes.GetNamedItem("transl").Value;
                         }
                         if (childnode.Name == "text_ru_w")
                         {
@@ -1162,12 +1157,11 @@ namespace SWToR_RUS
                             translator_w = childnode.Attributes.GetNamedItem("transl").Value;
                         }
                         if (jks % 6 == 0)
-                        {                          
+                        {
                         }
                         jks++;
                     }
                     */
-
         }
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
@@ -1213,7 +1207,7 @@ namespace SWToR_RUS
         {
             this.Hide();
             Form2 form2 = new Form2();
-            form2.Show();            
+            form2.Show();
         }
         private void dis_skills_CheckedChanged(object sender, EventArgs e) //Переключатель отключения перевода скилов
         {
@@ -1239,14 +1233,14 @@ namespace SWToR_RUS
         {
             upload_to_server.Enabled = false;
             upload_from_server.Enabled = false;
-            recover.Enabled = false;            
+            recover.Enabled = false;
             editor_btn.Enabled = false;
             ChangePathButton.Enabled = false;
             Install_btn.Enabled = false;
             del_btn.Enabled = false;
             btn_info.Enabled = false;
-            LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Начинаем выгрузку переводов на сервер...\n")));            
-            ProgressBar1.Value = 0;            
+            LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Начинаем выгрузку переводов на сервер...\n")));
+            ProgressBar1.Value = 0;
             await Task.Run(() => upload_to_server_method());
             upload_to_server.Enabled = true;
             upload_from_server.Enabled = true;
@@ -1263,11 +1257,11 @@ namespace SWToR_RUS
         public void upload_to_server_method() //Выгрузка переводов на сервер
         {
             string key_import = "";
-            string text_ru_m_import = "";
-            string translator_m_import = "";
-            string text_ru_w_import = "";
-            string translator_w_import = "";
             string text_en_import = "";
+            string text_ru_m_import = "";
+            string text_ru_w_import = "";
+            string translator_m_import = "";
+            string translator_w_import = "";
             string sql_update = "";
             string sql_insert = "";
             int num_edited_rows = 0;
@@ -1285,45 +1279,53 @@ namespace SWToR_RUS
                     xDoc1.Load(filename);
                     XmlElement xRoot1 = xDoc1.DocumentElement;
                     int jks = 1;
-                    foreach (XmlNode childnode in xRoot1)
+                    //пытаемся заблокировать выгрузку авторских строк
+                    if (xRoot1.Name.ToString() == "rezult_author")
                     {
-                        if (childnode.Name == "key")
-                            key_import = childnode.InnerText;
-                        if (childnode.Name == "text_en")
-                            text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
-                        if (childnode.Name == "text_ru_m")
+                        foreach (XmlNode childnode in xRoot1)
                         {
-                            text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
-                        }
-                        if (childnode.Name == "text_ru_w")
-                        {
-                            text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
-                        }
-                        if (jks % 4 == 0)
-                        {
-                            if (text_ru_w_import == "") //
+                            if (childnode.Name == "key")
+                                key_import = childnode.InnerText;
+                            if (childnode.Name == "text_en")
+                                text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
+                            if (childnode.Name == "text_ru_m")
                             {
-                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='NULL',translator_w=NULL WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='NULL')";
-                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','NULL','" + WebUtility.HtmlEncode(translator_m_import) + "','NULL')";
+                                text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
                             }
-                            else
+                            if (childnode.Name == "text_ru_w")
                             {
-                                sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
                             }
-                            MySqlCommand update = new MySqlCommand(sql_update, conn);
-                            int numRowsUpdated = update.ExecuteNonQuery();
-                            if (numRowsUpdated == 0)
+                            if (jks % 4 == 0)
                             {
-                                MySqlCommand insert = new MySqlCommand(sql_insert, conn);
-                                insert.ExecuteNonQuery();
+                                if (text_ru_w_import == "") //
+                                {
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='NULL',translator_w=NULL WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','NULL','" + WebUtility.HtmlEncode(translator_m_import) + "','NULL')";
+                                }
+                                else
+                                {
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                }
+                                MySqlCommand update = new MySqlCommand(sql_update, conn);
+                                int numRowsUpdated = update.ExecuteNonQuery();
+                                if (numRowsUpdated == 0)
+                                {
+                                    MySqlCommand insert = new MySqlCommand(sql_insert, conn);
+                                    insert.ExecuteNonQuery();
+                                }
+                                num_edited_rows++;
+                                ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
                             }
-                            num_edited_rows++;
-                            ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
+                            jks++;
                         }
-                        jks++;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Вы пытаетесь загрузить авторские строки перевода, пожалуйста обратитесь к администратору проекта", "Внимание", MessageBoxButtons.OK);
                     }
                 }
                 conn.Close();
@@ -1354,7 +1356,7 @@ namespace SWToR_RUS
                 Install_btn.Enabled = true;
             if (RusInstalled == 1)
                 del_btn.Enabled = true;
-            LogBox.AppendText("Загрузка закончена!\n");  
+            LogBox.AppendText("Загрузка закончена!\n");
         }
         public void upload_from_server_method() //Загрузка переводов с сервера
         {
@@ -1552,7 +1554,7 @@ namespace SWToR_RUS
         private void update_app_method() //Запуск обновления приложения
         {
             if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "updater.exe"))
-                Downloading_Files("https://drive.google.com/uc?export=download&id=1QiIVmdCQ-12d1cbMuaCSv7YiarFK0TYs", "updater.exe"); //Загружаем обновление            
+                Downloading_Files("https://drive.google.com/uc?export=download&id=1QiIVmdCQ-12d1cbMuaCSv7YiarFK0TYs", "updater.exe"); //Загружаем обновление
             Process proc = new Process();
             proc.StartInfo.WorkingDirectory = Application.StartupPath;
             proc.StartInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "updater.exe";
@@ -1566,7 +1568,7 @@ namespace SWToR_RUS
         private void Form1_FormClosed(object sender, FormClosedEventArgs e) //Обработчик закрытия приложения
         {
             if (is_run == 0)
-                Application.Exit();            
+                Application.Exit();
             if (steam_game.Checked == true)
                 TryFix();
             Application.Exit();
@@ -1728,8 +1730,8 @@ namespace SWToR_RUS
 
         private async void Form1_Shown(object sender, EventArgs e)
         {
-            LogBox.AppendText("Проверка наличия обновлений...\n");            
-            await Task.Run(() => loading_info());            
+            LogBox.AppendText("Проверка наличия обновлений...\n");
+            await Task.Run(() => loading_info());
         }
         private void loading_info()
         {
@@ -1740,7 +1742,7 @@ namespace SWToR_RUS
                 if (File.Exists("db\\translate.db3"))
                     File.Delete("db\\translate.db3");
                 FileDownloader.DownloadFileFromURLToPath("https://drive.google.com/file/d/1fqQhx8I3fWjmm2SYmZLkfk_Ndmd-5P6M/view?usp=sharing", "db\\translate.db3");
-                Downloading_Files("https://drive.google.com/uc?export=download&id=17LYGNgjgARgIxixgytyFoXaOw5C58aBN", "db\\hashes_filename.txt"); //Загружаем обновление               
+                Downloading_Files("https://drive.google.com/uc?export=download&id=17LYGNgjgARgIxixgytyFoXaOw5C58aBN", "db\\hashes_filename.txt"); //Загружаем обновление
                     
             }
             if (!File.Exists("WebDriver.dll"))
@@ -1754,7 +1756,7 @@ namespace SWToR_RUS
             {
                 
                 MysSQL_Connection.Open(); //Устанавливаем соединение с БД
-                DateTime dateValue;               
+                DateTime dateValue;
                 if (DateTime.TryParseExact(Config.AppSettings.Settings["row_updated_from_server"].Value, "dd.MM.yyyy HH:mm:ss", null, System.Globalization.DateTimeStyles.None, out dateValue))
                 {
                     sql = "SELECT COUNT(*) FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
@@ -1799,7 +1801,7 @@ namespace SWToR_RUS
             }
             catch (Exception eddd) //Отлавливаем ошибки
             {
-                Logging(eddd.Message); //Записываем в лог ошибку                
+                Logging(eddd.Message); //Записываем в лог ошибку
                 updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Не удалось соединиться с удалённой базой!"));
             }
 
@@ -1995,6 +1997,11 @@ namespace SWToR_RUS
                 num3--;
             }
             return result;
+        }
+
+        private void Form1_Activated(object sender, EventArgs e)
+        {
+
         }
     }
 

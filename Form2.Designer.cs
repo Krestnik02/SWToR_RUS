@@ -31,23 +31,12 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form2));
             this.data_trans_file = new System.Windows.Forms.DataGridView();
-            this.key = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.text_en = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.text_ru_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.text_ru_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.translator_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.translator_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.filesinfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.filesinfo_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.file_to_trans = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.upload_translate = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.translated = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.lst_font = new System.Windows.Forms.ComboBox();
-            this.fileinfo_user = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.new_author = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -77,6 +66,21 @@
             this.My_translate = new System.Windows.Forms.CheckBox();
             this.auth = new System.Windows.Forms.Button();
             this.author_ok = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.source_editor = new System.Windows.Forms.Button();
+            this.key = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.text_en = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.text_ru_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.text_ru_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.translator_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.translator_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.source_text_ru_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.source_text_ru_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.source_transl_m = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.source_transl_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.filesinfo = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.filesinfo_w = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.search_author = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.data_trans_file)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -99,6 +103,10 @@
             this.text_ru_w,
             this.translator_m,
             this.translator_w,
+            this.source_text_ru_m,
+            this.source_text_ru_w,
+            this.source_transl_m,
+            this.source_transl_w,
             this.filesinfo,
             this.filesinfo_w});
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -117,62 +125,6 @@
             this.data_trans_file.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.data_trans_file_CellEndEdit);
             this.data_trans_file.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.data_trans_file_CellEnter);
             // 
-            // key
-            // 
-            this.key.HeaderText = "Ключ";
-            this.key.Name = "key";
-            this.key.ReadOnly = true;
-            this.key.Visible = false;
-            this.key.Width = 58;
-            // 
-            // text_en
-            // 
-            this.text_en.HeaderText = "Английский текст";
-            this.text_en.Name = "text_en";
-            this.text_en.ReadOnly = true;
-            this.text_en.Width = 113;
-            // 
-            // text_ru_m
-            // 
-            this.text_ru_m.HeaderText = "Русский текст (М)";
-            this.text_ru_m.Name = "text_ru_m";
-            this.text_ru_m.Width = 99;
-            // 
-            // text_ru_w
-            // 
-            this.text_ru_w.HeaderText = "Русский текст (Ж)";
-            this.text_ru_w.Name = "text_ru_w";
-            this.text_ru_w.Width = 99;
-            // 
-            // translator_m
-            // 
-            this.translator_m.HeaderText = "Переводчик(М)";
-            this.translator_m.Name = "translator_m";
-            this.translator_m.ReadOnly = true;
-            this.translator_m.Width = 108;
-            // 
-            // translator_w
-            // 
-            this.translator_w.HeaderText = "Переводчик(Ж)";
-            this.translator_w.Name = "translator_w";
-            this.translator_w.ReadOnly = true;
-            this.translator_w.Width = 110;
-            // 
-            // filesinfo
-            // 
-            this.filesinfo.HeaderText = "Файл";
-            this.filesinfo.Name = "filesinfo";
-            this.filesinfo.ReadOnly = true;
-            this.filesinfo.Visible = false;
-            this.filesinfo.Width = 61;
-            // 
-            // filesinfo_w
-            // 
-            this.filesinfo_w.HeaderText = "Файл_ж";
-            this.filesinfo_w.Name = "filesinfo_w";
-            this.filesinfo_w.Visible = false;
-            this.filesinfo_w.Width = 75;
-            // 
             // file_to_trans
             // 
             this.file_to_trans.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -180,7 +132,7 @@
             this.file_to_trans.FormattingEnabled = true;
             this.file_to_trans.Location = new System.Drawing.Point(199, 6);
             this.file_to_trans.Name = "file_to_trans";
-            this.file_to_trans.Size = new System.Drawing.Size(523, 21);
+            this.file_to_trans.Size = new System.Drawing.Size(328, 21);
             this.file_to_trans.TabIndex = 1;
             this.file_to_trans.SelectedIndexChanged += new System.EventHandler(this.file_to_trans_SelectedIndexChanged);
             // 
@@ -193,31 +145,19 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Выбрать область редактирования";
             // 
-            // upload_translate
-            // 
-            this.upload_translate.Enabled = false;
-            this.upload_translate.Location = new System.Drawing.Point(397, 70);
-            this.upload_translate.Name = "upload_translate";
-            this.upload_translate.Size = new System.Drawing.Size(171, 47);
-            this.upload_translate.TabIndex = 4;
-            this.upload_translate.Text = "Сохранить\\Выгрузить Перевод";
-            this.upload_translate.UseVisualStyleBackColor = true;
-            this.upload_translate.Visible = false;
-            this.upload_translate.Click += new System.EventHandler(this.upload_translate_Click);
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(232, 30);
+            this.label2.Location = new System.Drawing.Point(225, 34);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(96, 13);
+            this.label2.Size = new System.Drawing.Size(115, 13);
             this.label2.TabIndex = 5;
-            this.label2.Text = "Файл переведён:";
+            this.label2.Text = "Участники перевода:";
             // 
             // translated
             // 
             this.translated.AutoSize = true;
-            this.translated.Location = new System.Drawing.Point(325, 30);
+            this.translated.Location = new System.Drawing.Point(346, 34);
             this.translated.Name = "translated";
             this.translated.Size = new System.Drawing.Size(68, 13);
             this.translated.TabIndex = 6;
@@ -226,7 +166,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(303, 123);
+            this.label3.Location = new System.Drawing.Point(147, 126);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(88, 13);
             this.label3.TabIndex = 7;
@@ -247,36 +187,16 @@
             "14",
             "15",
             "16"});
-            this.lst_font.Location = new System.Drawing.Point(397, 120);
+            this.lst_font.Location = new System.Drawing.Point(238, 123);
             this.lst_font.Name = "lst_font";
-            this.lst_font.Size = new System.Drawing.Size(46, 21);
+            this.lst_font.Size = new System.Drawing.Size(59, 21);
             this.lst_font.TabIndex = 9;
             this.lst_font.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
-            // 
-            // fileinfo_user
-            // 
-            this.fileinfo_user.Enabled = false;
-            this.fileinfo_user.Location = new System.Drawing.Point(110, 72);
-            this.fileinfo_user.Name = "fileinfo_user";
-            this.fileinfo_user.Size = new System.Drawing.Size(230, 20);
-            this.fileinfo_user.TabIndex = 10;
-            this.fileinfo_user.Visible = false;
-            this.fileinfo_user.TextChanged += new System.EventHandler(this.fileinfo_user_TextChanged);
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 75);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(92, 13);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Название файла";
-            this.label4.Visible = false;
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 99);
+            this.label5.Location = new System.Drawing.Point(12, 76);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(88, 13);
             this.label5.TabIndex = 12;
@@ -284,10 +204,10 @@
             // 
             // new_author
             // 
-            this.new_author.Location = new System.Drawing.Point(110, 95);
+            this.new_author.Location = new System.Drawing.Point(110, 72);
             this.new_author.MaxLength = 16;
             this.new_author.Name = "new_author";
-            this.new_author.Size = new System.Drawing.Size(230, 20);
+            this.new_author.Size = new System.Drawing.Size(187, 20);
             this.new_author.TabIndex = 13;
             this.new_author.Text = "Напишите своё имя или оставьте как есть";
             this.new_author.Click += new System.EventHandler(this.new_author_Click);
@@ -295,7 +215,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 123);
+            this.label6.Location = new System.Drawing.Point(12, 102);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(55, 13);
             this.label6.TabIndex = 14;
@@ -306,7 +226,7 @@
             this.page_lst.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.page_lst.Enabled = false;
             this.page_lst.FormattingEnabled = true;
-            this.page_lst.Location = new System.Drawing.Point(67, 120);
+            this.page_lst.Location = new System.Drawing.Point(67, 99);
             this.page_lst.Name = "page_lst";
             this.page_lst.Size = new System.Drawing.Size(64, 21);
             this.page_lst.TabIndex = 15;
@@ -315,7 +235,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(134, 123);
+            this.label7.Location = new System.Drawing.Point(134, 102);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(101, 13);
             this.label7.TabIndex = 16;
@@ -332,7 +252,7 @@
             "100",
             "500",
             "1000"});
-            this.colrowonpage.Location = new System.Drawing.Point(238, 120);
+            this.colrowonpage.Location = new System.Drawing.Point(238, 99);
             this.colrowonpage.Name = "colrowonpage";
             this.colrowonpage.Size = new System.Drawing.Size(59, 21);
             this.colrowonpage.TabIndex = 17;
@@ -353,7 +273,7 @@
             // 
             this.searchbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.searchbox.Enabled = false;
-            this.searchbox.Location = new System.Drawing.Point(6, 14);
+            this.searchbox.Location = new System.Drawing.Point(6, 18);
             this.searchbox.Name = "searchbox";
             this.searchbox.Size = new System.Drawing.Size(230, 20);
             this.searchbox.TabIndex = 20;
@@ -362,7 +282,7 @@
             // search_button
             // 
             this.search_button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.search_button.Location = new System.Drawing.Point(284, 38);
+            this.search_button.Location = new System.Drawing.Point(284, 34);
             this.search_button.Name = "search_button";
             this.search_button.Size = new System.Drawing.Size(77, 59);
             this.search_button.TabIndex = 21;
@@ -373,11 +293,12 @@
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.groupBox1.Controls.Add(this.search_author);
             this.groupBox1.Controls.Add(this.search_en);
             this.groupBox1.Controls.Add(this.search_ru);
-            this.groupBox1.Location = new System.Drawing.Point(6, 41);
+            this.groupBox1.Location = new System.Drawing.Point(6, 42);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(99, 62);
+            this.groupBox1.Size = new System.Drawing.Size(99, 83);
             this.groupBox1.TabIndex = 22;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Искать в";
@@ -386,7 +307,7 @@
             // 
             this.search_en.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.search_en.AutoSize = true;
-            this.search_en.Location = new System.Drawing.Point(6, 39);
+            this.search_en.Location = new System.Drawing.Point(6, 36);
             this.search_en.Name = "search_en";
             this.search_en.Size = new System.Drawing.Size(78, 17);
             this.search_en.TabIndex = 1;
@@ -398,7 +319,7 @@
             this.search_ru.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.search_ru.AutoSize = true;
             this.search_ru.Checked = true;
-            this.search_ru.Location = new System.Drawing.Point(6, 19);
+            this.search_ru.Location = new System.Drawing.Point(6, 15);
             this.search_ru.Name = "search_ru";
             this.search_ru.Size = new System.Drawing.Size(73, 17);
             this.search_ru.TabIndex = 0;
@@ -410,7 +331,7 @@
             // 
             this.search_filename.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.search_filename.Enabled = false;
-            this.search_filename.Location = new System.Drawing.Point(111, 80);
+            this.search_filename.Location = new System.Drawing.Point(111, 89);
             this.search_filename.Name = "search_filename";
             this.search_filename.Size = new System.Drawing.Size(156, 23);
             this.search_filename.TabIndex = 23;
@@ -422,7 +343,7 @@
             // 
             this.gotofile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.gotofile.Enabled = false;
-            this.gotofile.Location = new System.Drawing.Point(111, 57);
+            this.gotofile.Location = new System.Drawing.Point(111, 66);
             this.gotofile.Name = "gotofile";
             this.gotofile.Size = new System.Drawing.Size(109, 23);
             this.gotofile.TabIndex = 24;
@@ -434,7 +355,7 @@
             // 
             this.file_name_search.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.file_name_search.AutoSize = true;
-            this.file_name_search.Location = new System.Drawing.Point(9, 106);
+            this.file_name_search.Location = new System.Drawing.Point(9, 126);
             this.file_name_search.Name = "file_name_search";
             this.file_name_search.Size = new System.Drawing.Size(36, 13);
             this.file_name_search.TabIndex = 25;
@@ -444,7 +365,7 @@
             // 
             this.full_text.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.full_text.AutoSize = true;
-            this.full_text.Location = new System.Drawing.Point(111, 38);
+            this.full_text.Location = new System.Drawing.Point(111, 47);
             this.full_text.Name = "full_text";
             this.full_text.Size = new System.Drawing.Size(125, 17);
             this.full_text.TabIndex = 26;
@@ -463,7 +384,7 @@
             this.groupBox2.Controls.Add(this.search_button);
             this.groupBox2.Location = new System.Drawing.Point(1078, 9);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(373, 128);
+            this.groupBox2.Size = new System.Drawing.Size(373, 144);
             this.groupBox2.TabIndex = 27;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Поиск";
@@ -500,7 +421,7 @@
             // export
             // 
             this.export.Enabled = false;
-            this.export.Location = new System.Drawing.Point(728, 4);
+            this.export.Location = new System.Drawing.Point(533, 5);
             this.export.Name = "export";
             this.export.Size = new System.Drawing.Size(97, 23);
             this.export.TabIndex = 30;
@@ -580,7 +501,7 @@
             // 
             // auth
             // 
-            this.auth.Location = new System.Drawing.Point(574, 70);
+            this.auth.Location = new System.Drawing.Point(356, 70);
             this.auth.Name = "auth";
             this.auth.Size = new System.Drawing.Size(171, 47);
             this.auth.TabIndex = 37;
@@ -590,7 +511,7 @@
             // 
             // author_ok
             // 
-            this.author_ok.Location = new System.Drawing.Point(346, 95);
+            this.author_ok.Location = new System.Drawing.Point(303, 71);
             this.author_ok.Name = "author_ok";
             this.author_ok.Size = new System.Drawing.Size(47, 21);
             this.author_ok.TabIndex = 38;
@@ -598,11 +519,137 @@
             this.author_ok.UseVisualStyleBackColor = true;
             this.author_ok.Click += new System.EventHandler(this.author_ok_Click);
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(12, 75);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(92, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Название файла";
+            this.label4.Visible = false;
+            // 
+            // source_editor
+            // 
+            this.source_editor.Location = new System.Drawing.Point(533, 70);
+            this.source_editor.Name = "source_editor";
+            this.source_editor.Size = new System.Drawing.Size(97, 47);
+            this.source_editor.TabIndex = 39;
+            this.source_editor.Text = "Редактор авторского перевода";
+            this.source_editor.UseVisualStyleBackColor = true;
+            this.source_editor.Visible = false;
+            this.source_editor.Click += new System.EventHandler(this.source_editor_Click);
+            // 
+            // key
+            // 
+            this.key.HeaderText = "Ключ";
+            this.key.Name = "key";
+            this.key.ReadOnly = true;
+            this.key.Visible = false;
+            this.key.Width = 58;
+            // 
+            // text_en
+            // 
+            this.text_en.HeaderText = "Английский текст";
+            this.text_en.MinimumWidth = 90;
+            this.text_en.Name = "text_en";
+            this.text_en.ReadOnly = true;
+            this.text_en.Width = 113;
+            // 
+            // text_ru_m
+            // 
+            this.text_ru_m.HeaderText = "Русский текст (М)";
+            this.text_ru_m.MinimumWidth = 90;
+            this.text_ru_m.Name = "text_ru_m";
+            this.text_ru_m.Width = 99;
+            // 
+            // text_ru_w
+            // 
+            this.text_ru_w.HeaderText = "Русский текст (Ж)";
+            this.text_ru_w.MinimumWidth = 90;
+            this.text_ru_w.Name = "text_ru_w";
+            this.text_ru_w.Width = 99;
+            // 
+            // translator_m
+            // 
+            this.translator_m.HeaderText = "Переводчик (М)";
+            this.translator_m.MinimumWidth = 50;
+            this.translator_m.Name = "translator_m";
+            this.translator_m.ReadOnly = true;
+            this.translator_m.Width = 102;
+            // 
+            // translator_w
+            // 
+            this.translator_w.HeaderText = "Переводчик (Ж)";
+            this.translator_w.MinimumWidth = 50;
+            this.translator_w.Name = "translator_w";
+            this.translator_w.ReadOnly = true;
+            this.translator_w.Width = 104;
+            // 
+            // source_text_ru_m
+            // 
+            this.source_text_ru_m.HeaderText = "Исходный Русский текст (М)";
+            this.source_text_ru_m.MinimumWidth = 90;
+            this.source_text_ru_m.Name = "source_text_ru_m";
+            this.source_text_ru_m.Visible = false;
+            this.source_text_ru_m.Width = 145;
+            // 
+            // source_text_ru_w
+            // 
+            this.source_text_ru_w.HeaderText = "Исходный Русский текст (Ж)";
+            this.source_text_ru_w.MinimumWidth = 90;
+            this.source_text_ru_w.Name = "source_text_ru_w";
+            this.source_text_ru_w.Visible = false;
+            this.source_text_ru_w.Width = 148;
+            // 
+            // source_transl_m
+            // 
+            this.source_transl_m.HeaderText = "Исходный Переводчик (М)";
+            this.source_transl_m.MinimumWidth = 50;
+            this.source_transl_m.Name = "source_transl_m";
+            this.source_transl_m.Visible = false;
+            this.source_transl_m.Width = 137;
+            // 
+            // source_transl_w
+            // 
+            this.source_transl_w.HeaderText = "Исходный Переводчик (Ж)";
+            this.source_transl_w.MinimumWidth = 50;
+            this.source_transl_w.Name = "source_transl_w";
+            this.source_transl_w.Visible = false;
+            this.source_transl_w.Width = 137;
+            // 
+            // filesinfo
+            // 
+            this.filesinfo.HeaderText = "Файл";
+            this.filesinfo.Name = "filesinfo";
+            this.filesinfo.ReadOnly = true;
+            this.filesinfo.Visible = false;
+            this.filesinfo.Width = 61;
+            // 
+            // filesinfo_w
+            // 
+            this.filesinfo_w.HeaderText = "Файл_ж";
+            this.filesinfo_w.Name = "filesinfo_w";
+            this.filesinfo_w.Visible = false;
+            this.filesinfo_w.Width = 75;
+            // 
+            // search_author
+            // 
+            this.search_author.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.search_author.AutoSize = true;
+            this.search_author.Location = new System.Drawing.Point(6, 57);
+            this.search_author.Name = "search_author";
+            this.search_author.Size = new System.Drawing.Size(60, 17);
+            this.search_author.TabIndex = 2;
+            this.search_author.Text = "авторе";
+            this.search_author.UseVisualStyleBackColor = true;
+            // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1452, 595);
+            this.Controls.Add(this.source_editor);
             this.Controls.Add(this.author_ok);
             this.Controls.Add(this.auth);
             this.Controls.Add(this.My_translate);
@@ -623,17 +670,16 @@
             this.Controls.Add(this.new_author);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.fileinfo_user);
             this.Controls.Add(this.lst_font);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.translated);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.upload_translate);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.file_to_trans);
             this.Controls.Add(this.data_trans_file);
             this.Controls.Add(this.groupBox2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(1100, 600);
             this.Name = "Form2";
             this.Text = "Редактор - Не Авторизирован";
             this.Activated += new System.EventHandler(this.Form2_Activated);
@@ -652,23 +698,12 @@
         private System.Windows.Forms.DataGridView data_trans_file;
         private System.Windows.Forms.ComboBox file_to_trans;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button upload_translate;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label translated;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox lst_font;
-        private System.Windows.Forms.TextBox fileinfo_user;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox new_author;
-        private System.Windows.Forms.DataGridViewTextBoxColumn key;
-        private System.Windows.Forms.DataGridViewTextBoxColumn text_en;
-        private System.Windows.Forms.DataGridViewTextBoxColumn text_ru_m;
-        private System.Windows.Forms.DataGridViewTextBoxColumn text_ru_w;
-        private System.Windows.Forms.DataGridViewTextBoxColumn translator_m;
-        private System.Windows.Forms.DataGridViewTextBoxColumn translator_w;
-        private System.Windows.Forms.DataGridViewTextBoxColumn filesinfo;
-        private System.Windows.Forms.DataGridViewTextBoxColumn filesinfo_w;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox page_lst;
         private System.Windows.Forms.Label label7;
@@ -696,5 +731,20 @@
         private System.Windows.Forms.CheckBox My_translate;
         private System.Windows.Forms.Button auth;
         private System.Windows.Forms.Button author_ok;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button source_editor;
+        private System.Windows.Forms.DataGridViewTextBoxColumn key;
+        private System.Windows.Forms.DataGridViewTextBoxColumn text_en;
+        private System.Windows.Forms.DataGridViewTextBoxColumn text_ru_m;
+        private System.Windows.Forms.DataGridViewTextBoxColumn text_ru_w;
+        private System.Windows.Forms.DataGridViewTextBoxColumn translator_m;
+        private System.Windows.Forms.DataGridViewTextBoxColumn translator_w;
+        private System.Windows.Forms.DataGridViewTextBoxColumn source_text_ru_m;
+        private System.Windows.Forms.DataGridViewTextBoxColumn source_text_ru_w;
+        private System.Windows.Forms.DataGridViewTextBoxColumn source_transl_m;
+        private System.Windows.Forms.DataGridViewTextBoxColumn source_transl_w;
+        private System.Windows.Forms.DataGridViewTextBoxColumn filesinfo;
+        private System.Windows.Forms.DataGridViewTextBoxColumn filesinfo_w;
+        private System.Windows.Forms.RadioButton search_author;
     }
 }
