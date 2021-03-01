@@ -37,6 +37,7 @@ namespace SWToR_RUS
             this.auth = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.name = new System.Windows.Forms.TextBox();
+            this.Translate_Restrict = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -54,6 +55,7 @@ namespace SWToR_RUS
             this.email.Name = "email";
             this.email.Size = new System.Drawing.Size(230, 20);
             this.email.TabIndex = 14;
+            this.email.TextChanged += new System.EventHandler(this.email_TextChanged);
             // 
             // label2
             // 
@@ -71,10 +73,12 @@ namespace SWToR_RUS
             this.password.PasswordChar = '*';
             this.password.Size = new System.Drawing.Size(230, 20);
             this.password.TabIndex = 16;
+            this.password.TextChanged += new System.EventHandler(this.password_TextChanged);
             // 
             // auth
             // 
-            this.auth.Location = new System.Drawing.Point(182, 90);
+            this.auth.Enabled = false;
+            this.auth.Location = new System.Drawing.Point(182, 117);
             this.auth.Name = "auth";
             this.auth.Size = new System.Drawing.Size(171, 47);
             this.auth.TabIndex = 38;
@@ -97,12 +101,25 @@ namespace SWToR_RUS
             this.name.Name = "name";
             this.name.Size = new System.Drawing.Size(230, 20);
             this.name.TabIndex = 18;
+            this.name.TextChanged += new System.EventHandler(this.name_TextChanged);
+            // 
+            // Translate_Restrict
+            // 
+            this.Translate_Restrict.AutoSize = true;
+            this.Translate_Restrict.Enabled = false;
+            this.Translate_Restrict.Location = new System.Drawing.Point(17, 95);
+            this.Translate_Restrict.Name = "Translate_Restrict";
+            this.Translate_Restrict.Size = new System.Drawing.Size(250, 17);
+            this.Translate_Restrict.TabIndex = 41;
+            this.Translate_Restrict.Text = "Запретить редактирование моих переводов";
+            this.Translate_Restrict.UseVisualStyleBackColor = true;
             // 
             // Form3
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(365, 145);
+            this.ClientSize = new System.Drawing.Size(365, 176);
+            this.Controls.Add(this.Translate_Restrict);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.name);
             this.Controls.Add(this.auth);
@@ -130,5 +147,6 @@ namespace SWToR_RUS
         private System.Windows.Forms.Button auth;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox name;
+        private System.Windows.Forms.CheckBox Translate_Restrict;
     }
 }

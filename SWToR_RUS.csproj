@@ -169,6 +169,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
+    <None Include="Resources\discord.bmp" />
+    <None Include="Resources\vk.bmp" />
     <None Include="Resources\swtor1.jpg" />
     <None Include="Resources\swtor.jpg" />
   </ItemGroup>

@@ -100,96 +100,30 @@ namespace SWToR_RUS
             WindowState = FormWindowState.Maximized;
             file_name_search.Text = "";
             who_talk.Text = "";
-
-            using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
-            {
-                conn.Open();
-                string sql = "SELECT DISTINCT name FROM users";
-                MySqlCommand command = new MySqlCommand(sql, conn);
-                MySqlDataReader row = command.ExecuteReader();
-
-                if (row.HasRows)
-                {
-                    while (row.Read())
-                    {
-                        data.Add(row["name"].ToString());
-                    }
-                    row.Close();
-                }
-                conn.Close();
-            }
+            SQLiteConnection sqlite_conn;
+            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
+            sqlite_conn.Open();
+            SQLiteCommand sqlite_cmd;
+            sqlite_cmd = sqlite_conn.CreateCommand();
+            string sql_insert = "SELECT fileinfo FROM Translated GROUP by fileinfo";
+            sqlite_cmd.CommandText = sql_insert;
+            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
+            while (r.Read())
+                file_to_trans.Items.Add(r["fileinfo"].ToString());
+            r.Close();
+            sqlite_conn.Close();
 
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             if (ConfigurationManager.AppSettings["author"] != null && configuration.AppSettings.Settings["author"].Value != "")
             {
                 new_author.Text = configuration.AppSettings.Settings["author"].Value;
-                new_author.Enabled = false;
-                author_ok.Enabled = false;
-                file_to_trans.Enabled = true;
-                searchbox.Enabled = true;
-
-                if (ConfigurationManager.AppSettings["email"] != null && configuration.AppSettings.Settings["email"].Value != "")
-                {
-                    using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
-                    {
-                        conn.Open();
-                        string sql = "SELECT id, email, name, pass FROM users WHERE email='" + configuration.AppSettings.Settings["email"].Value + "' AND name ='" + configuration.AppSettings.Settings["author"].Value + "'";
-                        MySqlCommand command = new MySqlCommand(sql, conn);
-                        MySqlDataReader row = command.ExecuteReader();
-                        if (row.HasRows)
-                        {
-                            while (row.Read())
-                            {
-                                if (row["pass"].ToString() == configuration.AppSettings.Settings["password"].Value)
-                                {
-                                    auth.Enabled = false;
-                                    authorization = true;
-                                    this.Text = "Редактор - Авторизирован: " + row["name"].ToString();
-
-                                    //выводим список в комбобоксе
-                                    SQLiteConnection sqlite_conn;
-                                    sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-                                    sqlite_conn.Open();
-                                    SQLiteCommand sqlite_cmd;
-                                    sqlite_cmd = sqlite_conn.CreateCommand();
-                                    string sql_insert = "SELECT fileinfo FROM Translated GROUP by fileinfo";
-                                    sqlite_cmd.CommandText = sql_insert;
-                                    SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                                    while (r.Read())
-                                        file_to_trans.Items.Add(r["fileinfo"].ToString());
-                                    r.Close();
-                                    sqlite_conn.Close();
-                                }
-                            }
-                            row.Close();
-                        }
-                        conn.Close();
-                    }
-                } else
-                {
-                    auth.Enabled = true;
-                    //выводим список в комбобоксе
-                    SQLiteConnection sqlite_conn;
-                    sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-                    sqlite_conn.Open();
-                    SQLiteCommand sqlite_cmd;
-                    sqlite_cmd = sqlite_conn.CreateCommand();
-                    string sql_insert = "SELECT fileinfo FROM Translated WHERE ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')) GROUP by fileinfo";
-                    sqlite_cmd.CommandText = sql_insert;
-                    SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                    while (r.Read())
-                        file_to_trans.Items.Add(r["fileinfo"].ToString());
-                    r.Close();
-                    sqlite_conn.Close();
-                }
-            } else
-            {
-                MessageBox.Show("Для продолжения работы введите свой никнейм в поле \"Автор перевода\"", "Внимание", MessageBoxButtons.OK);
+                My_translate.Enabled = true;
             }
+            
         }
 
-        private async void file_to_trans_SelectedIndexChanged(object sender, EventArgs e)
-        {            
+        private async void file_to_trans_SelectedIndexChanged(object sender, EventArgs e) // выбор "файла" для перевода
+        {
             if (file_to_trans.SelectedIndex != -1)
             {
                 if (selected_file_to_transl != file_to_trans.SelectedItem.ToString())
@@ -200,16 +134,28 @@ namespace SWToR_RUS
                         searchbox.Text = "";
                         string sql_insert = "";
                         string sql_insert_part2 = "";
-                        source_list_m.Clear();
-                        source_list_w.Clear();
                         data_trans_file.Rows.Clear();
-                        /*List<string> list_translators = new List<string>();*/
+                        List<string> list_translators = new List<string>();
                         SQLiteConnection sqlite_conn;
                         sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
                         sqlite_conn.Open();
                         int count_pgs = 0;
-                        if (checkBox1.Checked == true || authorization == false)
-                            sql_insert_part2 += " AND ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "'))";
+                        string select_where_my = "";
+                        string select_where_deepl = "";
+                        if (My_translate.Checked)
+                            select_where_my = "translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "'";
+                        if (checkBox1.Checked)
+                            select_where_deepl = "translator_m='Deepl' OR translator_w='Deepl'";
+                        sql_insert = "SELECT fileinfo FROM Translated";
+                        if (select_where_my != "")
+                        {
+                            sql_insert_part2 += " AND (" + select_where_my;
+                            if (select_where_deepl != "")
+                                sql_insert_part2 += " OR " + select_where_deepl;
+                            sql_insert_part2 += ")";
+                        }
+                        else if (select_where_deepl != "")
+                            sql_insert_part2 += " AND (" + select_where_deepl + ")";
                         sql_insert = "SELECT COUNT(DISTINCT text_en) FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2;
                         SQLiteCommand oCmd = new SQLiteCommand(sql_insert, sqlite_conn);
                         count_pgs = Convert.ToInt32(oCmd.ExecuteScalar());
@@ -238,14 +184,12 @@ namespace SWToR_RUS
                         search_filename.Enabled = false;
                     }
                 }
-                if(authorization == true)
-                    export.Enabled = true;
+                export.Enabled = true;
             }
             else
                 export.Enabled = false;
             if (fileinfo_user.Text != "")
                 fileinfo_user.Enabled = true;
-
         }
 
         public void data_upload_trans(DataGridViewCellEventArgs e, int status, string xml_text = "", string searchValue = "", string file = "")
@@ -386,176 +330,17 @@ namespace SWToR_RUS
 
         public void data_trans_file_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            int alert_m = 0;
-            int alert_w = 0;
-
-            //проверяем на изменения с исходной строкой, если нет значит строка сделана им в этой сессии! Что бы не выводить ошибку, если он ввел текст, а потом удалил свой же
-            if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) == ""
-                && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) != buffer_m
-                && source_list_m[e.RowIndex] != Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value)
-                && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != new_author.Text)
-            {
-                MessageBox.Show("Только проверяющий может удать строки других авторов", "Внимание", MessageBoxButtons.OK); //если пытается удалить строку в м переводе, проверяем авторизован ли выводим мсбокс
-                data_trans_file.Rows[e.RowIndex].Cells[2].Value = source_list_m[e.RowIndex]; //возвращаем во вьюгрид исходную строку
-            }
-
-            //проверяем на изменения с исходной строкой, если нет значит строка сделана им в этой сессии! Что бы не выводить ошибку, если он ввел текст, а потом удалил свой же
-            else if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) == ""
-                && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) != buffer_w
-                && source_list_w[e.RowIndex] != Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value)
-                && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != new_author.Text)
-            {
-                MessageBox.Show("Только проверяющий может удать строки других авторов", "Внимание", MessageBoxButtons.OK); //если пытается удалить строку в ж переводе, проверяем авторизован ли выводим мсбокс
-                data_trans_file.Rows[e.RowIndex].Cells[3].Value = source_list_w[e.RowIndex]; //возвращаем во вьюгрид исходную строку
-            }
-
-            else if (source_list_m[e.RowIndex] == "" && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) != "") //если строка изначально была пустая
-            {
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-                data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
-                data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-
-            }
-            else if (source_list_w[e.RowIndex] == "" && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) != "") //если строка изначально была пустая
-            {
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-                data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
-                data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-            }
-
-            //проверяем есть ли изменения строк в м варианте
-            else if (buffer_m != Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) && buffer_m != "" && source_list_m[e.RowIndex] != "")
-            {
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-
-                for (int i = 0; i < data.Count; i++)
-                {
-                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == data[i].ToString()
-                        && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != new_author.Text.ToString())
-                    {
-                        alert_m = 1;
-                    }
-                }
-
-                //проверяем наша ли это строка или Deepl
-                if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == new_author.Text.ToString()
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "Deepl"
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "")
-                {
-                    if (e.ColumnIndex == 2)
-                    {
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
-                    }
-
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-                }
-                else if (alert_m == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) != "") //проверяем если автор этой м строки авторизован
-                {
-                    if (e.ColumnIndex == 2)
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "2"; //помечаем строку, как строку которая внесена авторизированным автором
-
-                    /* Заносим эти строки в отдельный файл */
-                    DialogResult dialogResult = MessageBox.Show(alert_m + "ВНИМАНИЕ! Вы пытаетесь изменить строку перевода авторизированного автора, он будет уведомлен об этом, кроме того информация внесенная вами не будет загружена на сервер до его согласия на изменение, применить изменения?", "Внимание", MessageBoxButtons.YesNo);
-                    if (dialogResult == DialogResult.Yes)
-                    {
-                        data_upload_trans(e, 0, "", "2", "export\\error.xml");
-                    }
-                    else
-                    {
-                        if (e.ColumnIndex == 2)
-                        {
-                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "0"; //сбрасываем состояние строки
-                            data_trans_file.Rows[e.RowIndex].Cells[2].Value = source_list_m[e.RowIndex]; //возвращаем во вьюгрид исходную строку
-                        }
-                    }
-
-                    alert_m = 0;
-                }
-                else
-                {
-                    if (e.ColumnIndex == 2)
-                    {
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
-                    }
-
-                    /* Заносим эти строки в отдельный файл */
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-                }
-            }
-
-            //проверяем есть ли изменения строк в ж варианте
-            else if (buffer_w != Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) && buffer_w != "" && source_list_w[e.RowIndex] != "")
-            {
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-
-                for (int i = 0; i < data.Count; i++)
-                {
-                    if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == data[i].ToString()
-                        && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != new_author.Text.ToString())
-                    {
-                        alert_w = 1;
-                    }
-                }
-
-                //проверяем наша ли это строка или Deepl
-                if (Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == new_author.Text.ToString()
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "Deepl"
-                    || Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "")
-                {
-                    if (e.ColumnIndex == 3)
-                    {
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
-                    }
-
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-                }
-                else if (alert_w == 1 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) != "") //проверяем если автор этой ж строки авторизован
-                {
-                    if (e.ColumnIndex == 3)
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "2"; //помечаем строку, как строку которая внесена авторизированным автором
-
-                    /* Заносим эти строки в отдельный файл */
-                    DialogResult dialogResult = MessageBox.Show(alert_w + "ВНИМАНИЕ! Вы пытаетесь изменить строку перевода авторизированного автора, он будет уведомлен об этом, кроме того информация внесенная вами не будет загружена на сервер до его согласия на изменение, применить изменения?", "Внимание", MessageBoxButtons.YesNo);
-                    if (dialogResult == DialogResult.Yes)
-                    {
-                        data_upload_trans(e, 0, "", "2", "export\\error.xml");
-                    }
-                    else
-                    {
-                        if (e.ColumnIndex == 3)
-                        {
-                            data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "0"; //сбрасываем состояние строки
-                            data_trans_file.Rows[e.RowIndex].Cells[3].Value = source_list_w[e.RowIndex]; //возвращаем во вьюгрид исходную строку
-                        }
-                    }
-
-                    alert_w = 0;
-                }
-                else
-                {
-                    if (e.ColumnIndex == 3)
-                    {
-                        data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
-                    }
-
-                    /* Заносим эти строки в отдельный файл */
-                    data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-                }
-            } else
-            {
-                if (e.ColumnIndex == 2)
-                {
-                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1"; //помечаем строку, как любую другую
-                }
-
-                if (e.ColumnIndex == 3)
-                {
-                    data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1"; //помечаем строку, как любую другую
-                }
-
-                data_trans_file.CurrentCell.Style.Font = new Font("Microsoft Sans Serif", Convert.ToInt32(lst_font.Text), FontStyle.Bold); //помечаем строки которые изменяли
-                data_upload_trans(e, 1, "", "1", "user_translation\\user_translation.xml");
-            }
+            if (e.ColumnIndex == 2 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) != buffer_m && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) != "")
+                data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1";
+            else if (e.ColumnIndex == 2 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[4].Value) == "Deepl" && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[2].Value) == buffer_m)
+                data_trans_file.Rows[e.RowIndex].Cells["filesinfo"].Value = "1";
+            if (e.ColumnIndex == 3 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) != buffer_w && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) != "")
+                data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1";
+            else if (e.ColumnIndex == 3 && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[5].Value) == "Deepl" && Convert.ToString(data_trans_file.Rows[e.RowIndex].Cells[3].Value) == buffer_m)
+                data_trans_file.Rows[e.RowIndex].Cells["filesinfo_w"].Value = "1";
+            fileinfo_user.Enabled = true;
+            if (fileinfo_user.Text != "")
+                upload_translate.Enabled = true;
         }
 
         private void data_trans_file_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
@@ -584,22 +369,29 @@ namespace SWToR_RUS
 
         private void fileinfo_user_TextChanged(object sender, EventArgs e)
         {
-/*            if (fileinfo_user.Text != "")
+           if (fileinfo_user.Text != "")
                 upload_translate.Enabled = true;
             else
                 upload_translate.Enabled = false;
-*/        }
-
-        private /*async*/ void upload_translate_Click(object sender, EventArgs e)
-        {
-            /*await Task.Run(() => uploading());*/
         }
-        public void uploading()
+
+        private async void upload_translate_Click(object sender, EventArgs e) //Сохранение переводов в файл для выгрузки +++
         {
-/*            string new_authr = new_author.Text;
+            await Task.Run(() => uploading());
+        }
+        public void uploading() //сохранение переводов в файл для выгрузки +++
+        {
+            string new_authr = "5";
             string xml_text = "";
             List<string> list_keys = new List<string>();
-            
+            if (new_author.Text != "" && new_author.Text != "Напишите своё имя или оставьте как есть")
+                new_authr = new_author.Text;
+            if (new_authr != "5")
+            {
+                Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                configuration.AppSettings.Settings["author"].Value = new_authr;
+                configuration.Save(ConfigurationSaveMode.Modified);
+            }
             if (File.Exists("user_translation\\" + fileinfo_user.Text + ".xml"))
             {
                 DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите продолжать записывать в него?", "Подтверждение", MessageBoxButtons.YesNo);
@@ -610,7 +402,7 @@ namespace SWToR_RUS
                 }
                 else
                 {
-                    fileinfo_user.Text = fileinfo_user.Text + "1";
+                    fileinfo_user.Text +=  "1";
                     using (StreamWriter file_for_exam =
                      new StreamWriter("user_translation\\" + fileinfo_user.Text + ".xml", true, encoding: Encoding.UTF8))
                     {
@@ -667,50 +459,28 @@ namespace SWToR_RUS
                                 }
                                 else if (change_other_strings == "yes")
                                 {
-                                        if (!list_keys.Contains(s["key_unic"].ToString()))
-                                            list_keys.Add(s["key_unic"].ToString());
-                                }  
+                                    if (!list_keys.Contains(s["key_unic"].ToString()))
+                                        list_keys.Add(s["key_unic"].ToString());
+                                }
                             }
                             s.Close();
                             list_keys.ForEach(delegate (string name)
                             {
-                                if (Convert.ToString(row.Cells["text_ru_w"].Value) == "" && authorization == true)
+                                if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
                                 {
-                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w=NULL,translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w=NULL WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
-                                    }
-                                    else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
-                                    }
-                                    else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_w=NULL,translator_w=NULL WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
-                                    }
+                                    sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
                                 }
-                                else
+                                else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
                                 {
-                                    if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue) && row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
-                                    }
-                                    else if (row.Cells["filesinfo"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
-                                    }
-                                    else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
-                                    {
-                                        sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
-                                        xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
-                                    }
+                                    sql_insert = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "',translator_m='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_w"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
                                 }
-
+                                else if (row.Cells["filesinfo_w"].Value.ToString().Equals(searchValue))
+                                {
+                                    sql_insert = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "',translator_w='" + WebUtility.HtmlEncode(new_authr) + "' WHERE key_unic ='" + name + "'";
+                                    xml_text = "<key>" + WebUtility.HtmlEncode(name) + "</key><text_en>" + WebUtility.HtmlEncode(row.Cells["text_en"].Value.ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(row.Cells["translator_m"].Value.ToString()) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_m"].Value.ToString()) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(new_authr) + "\">" + WebUtility.HtmlEncode(row.Cells["text_ru_w"].Value.ToString()) + "</text_ru_w>";
+                                }
                                 using (StreamWriter file_for_exam =
                          new StreamWriter("user_translation\\" + fileinfo_user.Text + ".xml", true, encoding: Encoding.UTF8))
                                 {
@@ -721,15 +491,8 @@ namespace SWToR_RUS
                                 num_edited_rows++;
                                 xml_text = "";
                             });
-                            if (row.Cells["filesinfo"].Value.ToString() == "2")
-                            {
-                                row.Cells["filesinfo"].Value = "0";
-                            }
-
-                            if (row.Cells["filesinfo_w"].Value.ToString() == "2")
-                            {
-                                row.Cells["filesinfo_w"].Value = "0";
-                            }
+                            row.Cells["filesinfo"].Value = "0";
+                            row.Cells["filesinfo_w"].Value = "0";
                         }
                         progressBar_text.Invoke((MethodInvoker)(() => progressBar_text.Value += 1));
                         list_keys.Clear();
@@ -745,32 +508,67 @@ namespace SWToR_RUS
                 file_for_exam.WriteLine("</rezult>");
             }
             if (num_edited_rows != 0)
-            {
-                //buffer = "";
-                MessageBox.Show("Файл сохранён в папке user_translation! Выгружено " + num_edited_rows + " строк.");
-            }
+                MessageBox.Show("Файл сохранён в папке user_translation! Сохранено " + num_edited_rows + " строк.");
             else
-            {
-                //buffer = "";
-                MessageBox.Show("Выгружать нечего!");
-            }
-*/        }
+                MessageBox.Show("Сохранять нечего!");
+        }
 
         private async void page_lst_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (page_transl != page_lst.SelectedItem.ToString())
             {
-                page_transl = page_lst.SelectedItem.ToString();
-                await Task.Run(() => data_load());
-            }   
+                int rows_edited = 0;
+                foreach (DataGridViewRow row in data_trans_file.Rows)
+                {
+                    if (row.Cells["filesinfo"].Value.ToString().Equals("1") || row.Cells["filesinfo_w"].Value.ToString().Equals("1"))
+                        rows_edited = 1;
+                }
+                if (rows_edited == 1)
+                {
+                    DialogResult dialogResult1 = MessageBox.Show("Вы собираетесь покинуть эту страницу текста. У вас есть не сохранённые отредактированные строки. Желаете покинуть страницу?", "Подтверждение", MessageBoxButtons.YesNo);
+                    if (dialogResult1 == DialogResult.Yes)
+                    {
+                        page_transl = page_lst.SelectedItem.ToString();
+                        await Task.Run(() => data_load());
+                    }
+                    else
+                        page_lst.SelectedIndex = page_lst.FindStringExact(page_transl);
+                }
+                else
+                {
+                    page_transl = page_lst.SelectedItem.ToString();
+                    await Task.Run(() => data_load());
+                }
+            }
         }
 
         private async void colrowonpage_SelectedIndexChanged(object sender, EventArgs e)
         {           
             if (count_per_pages != Int32.Parse(colrowonpage.SelectedItem.ToString()))
             {
-                count_per_pages = Int32.Parse(colrowonpage.SelectedItem.ToString());
-                await Task.Run(() => data_load());
+                int rows_edited = 0;
+                foreach (DataGridViewRow row in data_trans_file.Rows)
+                {
+                    if (row.Cells["filesinfo"].Value.ToString().Equals("1") || row.Cells["filesinfo_w"].Value.ToString().Equals("1"))
+                        rows_edited = 1;
+                }
+                if (rows_edited == 1)
+                {
+                    DialogResult dialogResult1 = MessageBox.Show("Вы собираетесь изменить режим просмотра. У вас есть не сохранённые отредактированные строки. Желаете покинуть страницу?", "Подтверждение", MessageBoxButtons.YesNo);
+                    if (dialogResult1 == DialogResult.Yes)
+                    {
+                        count_per_pages = Int32.Parse(colrowonpage.SelectedItem.ToString());
+                        await Task.Run(() => data_load());
+                    }
+                    else
+                        colrowonpage.SelectedIndex = colrowonpage.FindStringExact(count_per_pages.ToString());
+                }
+                else
+                {
+                    count_per_pages = Int32.Parse(colrowonpage.SelectedItem.ToString());
+                    await Task.Run(() => data_load());
+                }
+                
             }
         }
         private void data_load()
@@ -779,11 +577,9 @@ namespace SWToR_RUS
             {
                 Invoke(new Action(() =>
                 {
-                    source_list_m.Clear();
-                    source_list_w.Clear();
                     data_trans_file.Rows.Clear();
-                    string sql_insert_part2 = "";
                     string sql_insert_part3 = "";
+                    string sql_insert_part2 = "";
                     string sql_insert = "";
                     int count = 0;
                     int countpgs = 0;
@@ -791,6 +587,7 @@ namespace SWToR_RUS
                         count_per_pages = Int32.Parse(colrowonpage.Text);
                     else
                         colrowonpage.SelectedIndex = colrowonpage.FindStringExact(count_per_pages.ToString());
+                    List<string> list_translators = new List<string>();
                     using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
                     {
                         sqlite_conn.Open();
@@ -812,27 +609,31 @@ namespace SWToR_RUS
                                     if (search_en.Checked == true)
                                         sql_insert_part2 = "text_en like '%" + WebUtility.HtmlEncode(searchbox.Text) + "%'";
                                 }
-                                if (checkBox1.Checked == true || authorization == false)
+                                if (checkBox1.Checked == true)
                                 {
-                                    sql_insert_part2 += " AND ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "'))";
+                                    if (My_translate.Checked == true)
+                                        sql_insert_part2 += " AND (translator_m='Deepl' OR translator_w='Deepl' OR translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')";
+                                    else
+                                        sql_insert_part2 += " AND (translator_m='Deepl' OR translator_w='Deepl')";
                                 }
+                                else if (My_translate.Checked == true)
+                                    sql_insert_part2 += " AND (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')";
                             }
-                            else if (checkBox1.Checked == true || authorization == false)
+                            else if (checkBox1.Checked == true)
                             {
-                                sql_insert_part2 = " AND ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "'))";
+                                if (My_translate.Checked == true)
+                                    sql_insert_part2 = " AND (translator_m='Deepl' OR translator_w='Deepl' OR translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')";
+                                else
+                                    sql_insert_part2 = " AND (translator_m='Deepl' OR translator_w='Deepl')";
                             }
-
+                            else if (My_translate.Checked == true)
+                                sql_insert_part2 = " AND (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')";
                             if (searchbox.Text != "")
                                 sql_insert = "SELECT COUNT(DISTINCT text_en) FROM Translated WHERE " + sql_insert_part2;
                             else
                                 sql_insert = "SELECT COUNT(DISTINCT text_en) FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2;
                             sqlite_cmd.CommandText = sql_insert;
-                            SQLiteDataReader s = sqlite_cmd.ExecuteReader();
-                            while (s.Read())
-                            {
-                                count = int.Parse(s["COUNT(DISTINCT text_en)"].ToString());
-                            }
-                            s.Close();
+                            count = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
                             countpgs = count / count_per_pages;
                             countpgs += 1;
                             if (go_to_file == "1")
@@ -841,7 +642,7 @@ namespace SWToR_RUS
                                 for (int i = 1; i <= countpgs; i++)
                                 {
                                     page_lst.Items.Add(i);
-                                }                                
+                                }
                                 page_lst.SelectedIndex = page_lst.FindStringExact(page_transl);
                                 sql_insert_part3 = " LIMIT " + (count_per_pages * int.Parse(page_transl) - count_per_pages) + "," + count_per_pages;
                             }
@@ -870,7 +671,7 @@ namespace SWToR_RUS
                             if (searchbox.Text != "")
                                 sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE " + sql_insert_part2 + " GROUP BY text_en ORDER by ID" + sql_insert_part3;
                             else
-                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2 + " GROUP BY text_en ORDER by ID" + sql_insert_part3 ;
+                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2 + " GROUP BY text_en ORDER by ID" + sql_insert_part3;
                             sqlite_cmd.CommandText = sql_insert;
                             SQLiteDataReader r = sqlite_cmd.ExecuteReader();
                             loading_text.Parent = progressBar_text;
@@ -895,22 +696,18 @@ namespace SWToR_RUS
                                     data_trans_file.Rows[0].Selected = false;
                                     data_trans_file.Rows[rowNumber].Selected = true;
                                 }
-
-                                source_list_m.Add(WebUtility.HtmlDecode(r["text_ru_m"].ToString()));
-                                source_list_w.Add(WebUtility.HtmlDecode(r["text_ru_w"].ToString()));
-
-                                /*if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_m"].ToString())))
+                                if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_m"].ToString())))
                                     list_translators.Add(WebUtility.HtmlDecode(r["translator_m"].ToString()));
                                 if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_w"].ToString())))
-                                    list_translators.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));*/
-                                progressBar_text.Value+= 1;
+                                    list_translators.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));
+                                progressBar_text.Value += 1;
                             }
-                            
+
                             r.Close();
                         }
                         sqlite_conn.Close();
                     }
-                    /*string list_translator = "";
+                    string list_translator = "";
                     foreach (string list_trans in list_translators)
                     {
                         if (list_translator != "" && list_trans == "1")
@@ -937,8 +734,8 @@ namespace SWToR_RUS
                             list_translator += "," + list_trans;
                         else if (list_trans != "" && list_trans != "1" && list_trans != "2" && list_trans != "Deepl" && list_trans != "4" && list_trans != "5")
                             list_translator = list_trans;
-                    }*/
-                    /*translated.Text = list_translator;*/
+                    }
+                    translated.Text = list_translator;
                     //set autosize mode
                     data_trans_file.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
                     data_trans_file.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -969,33 +766,7 @@ namespace SWToR_RUS
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            searchbox.Text = "";
-            selected_file_to_transl = "";
-            translated.Text = "Неизвестно";
-            upload_translate.Enabled = false;
-            lst_font.Enabled = false;
-            colrowonpage.Enabled = false;
-            page_lst.Items.Clear();
-            page_lst.Enabled = false;
-            file_to_trans.Items.Clear();
-            source_list_m.Clear();
-            source_list_w.Clear();
-            data_trans_file.Rows.Clear();
-            string sql_insert;
-            SQLiteConnection sqlite_conn;
-            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-            sqlite_conn.Open();
-            SQLiteCommand sqlite_cmd;
-            sqlite_cmd = sqlite_conn.CreateCommand();
-            sql_insert = "SELECT fileinfo FROM Translated WHERE ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')) GROUP by fileinfo;";
-            sqlite_cmd.CommandText = sql_insert;
-            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-            while (r.Read())
-                file_to_trans.Items.Add(r["fileinfo"].ToString());
-            r.Close();
-            sqlite_conn.Close();
-            gotofile.Enabled = false;
-            search_filename.Enabled = false;
+            translate_options();
         }
 
         private async void search_button_Click(object sender, EventArgs e)
@@ -1160,8 +931,6 @@ namespace SWToR_RUS
 
         private void searchbox_TextChanged(object sender, EventArgs e)
         {
-            source_list_m.Clear();
-            source_list_w.Clear();
             data_trans_file.Rows.Clear();
             page_lst.Enabled = false;
             upload_translate.Enabled = false;
@@ -1233,7 +1002,7 @@ namespace SWToR_RUS
             }                    
         }
 
-        private void export_Click(object sender, EventArgs e)
+        private void export_Click(object sender, EventArgs e) // Экспорт текстов в xml +++
         {
             if (!Directory.Exists("export"))
             {
@@ -1298,93 +1067,8 @@ namespace SWToR_RUS
 
         private void auth_Click(object sender, EventArgs e)
         {
-            if(new_author.Text != "Напишите своё имя или оставьте как есть" && new_author.Text != "")
-            {
-                Data.Value = new_author.Text;
-                auth.Enabled = false;
-                Form3 form3 = new Form3();
-                form3.Show();
-            } else
-            {
-                auth.Enabled = false;
-                Form3 form3 = new Form3();
-                form3.Show();
-            }
-        }
-
-        private void author_ok_Click(object sender, EventArgs e)
-        {
-            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            if (ConfigurationManager.AppSettings["author"] != null && configuration.AppSettings.Settings["author"].Value != "" )
-            {
-                MessageBox.Show("Ваш конфигурационный файл поврежден, обратитесь к администратору", "Ошибка", MessageBoxButtons.OK);
-            } 
-            else if (new_author.Text.ToString() == "Напишите своё имя или оставьте как есть" || new_author.Text.ToString() == "")
-            {
-                MessageBox.Show("Заполните поле \"Автор перевода\"", "Ошибка", MessageBoxButtons.OK);
-            }
-            else
-            {
-                Regex regex = new Regex(@"^[A-Za-z0-9]+$");
-                if(regex.IsMatch(new_author.Text)) {
-
-                    using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
-                    {
-                        conn.Open();
-                        string sql = "SELECT name FROM users WHERE name='" + new_author.Text.ToString() + "'";
-                        MySqlCommand command = new MySqlCommand(sql, conn);
-                        MySqlDataReader row = command.ExecuteReader();
-                        if (row.HasRows || new_author.Text == "deepl" || new_author.Text == "Deepl")
-                        {
-                            DialogResult dialogResult = MessageBox.Show("В поле \"Автор перевода\" введен существующий автор, вам необходимо авторизоваться под этим именем", "Внимание", MessageBoxButtons.YesNo);
-                            if (dialogResult == DialogResult.Yes)
-                            {
-                                new_author.Enabled = false;
-                                author_ok.Enabled = false;
-                                Data.Value = new_author.Text;
-                                Form3 form3 = new Form3();
-                                form3.Show();
-                            }
-                            else
-                            {
-                                auth.Enabled = true;
-                                Data.Trigger = 0;
-                                new_author.Enabled = true;
-                                author_ok.Enabled = true;
-                                searchbox.Enabled = false;
-                                file_to_trans.Enabled = false;
-                                new_author.Clear();
-                            }
-                        } else
-                        {
-                            searchbox.Enabled = true;
-                            file_to_trans.Enabled = true;
-                            new_author.Enabled = false;
-                            author_ok.Enabled = false;
-                            configuration.AppSettings.Settings["author"].Value = new_author.Text.ToString();
-                            configuration.Save(ConfigurationSaveMode.Modified);
-                            auth.Enabled = true;
-                            //выводим список в комбобоксе
-                            SQLiteConnection sqlite_conn;
-                            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-                            sqlite_conn.Open();
-                            SQLiteCommand sqlite_cmd;
-                            sqlite_cmd = sqlite_conn.CreateCommand();
-                            string sql_insert = "SELECT fileinfo FROM Translated WHERE ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')) GROUP by fileinfo";
-                            sqlite_cmd.CommandText = sql_insert;
-                            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                            while (r.Read())
-                                file_to_trans.Items.Add(r["fileinfo"].ToString());
-                            r.Close();
-                            sqlite_conn.Close();
-                        }
-                        conn.Close();
-                    }
-                } else
-                {
-                    MessageBox.Show("Поле \"Автор перевода\" содержит недопустимые символы", "Ошибка", MessageBoxButtons.OK);
-                }
-            }
+            Form3 form3 = new Form3();
+            form3.Show();
         }
 
         private void new_author_Click(object sender, EventArgs e)
@@ -1395,40 +1079,52 @@ namespace SWToR_RUS
             }
         }
 
-        private void Form2_Activated(object sender, EventArgs e)
+        private void My_translate_CheckedChanged(object sender, EventArgs e)
         {
-            if(Data.Trigger == 3)
+            translate_options();
+        }
+        private void translate_options() //выключатели отображения перевода Дипл, авторского
+        {
+            searchbox.Text = "";
+            selected_file_to_transl = "";
+            translated.Text = "Неизвестно";
+            upload_translate.Enabled = false;
+            lst_font.Enabled = false;
+            colrowonpage.Enabled = false;
+            page_lst.Items.Clear();
+            page_lst.Enabled = false;
+            file_to_trans.Items.Clear();
+            data_trans_file.Rows.Clear();
+            string sql_insert;
+            SQLiteConnection sqlite_conn;
+            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
+            sqlite_conn.Open();
+            SQLiteCommand sqlite_cmd;
+            sqlite_cmd = sqlite_conn.CreateCommand();
+            string select_where_my = "";
+            string select_where_deepl = "";
+            if (My_translate.Checked == true)
+                select_where_my = "translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "'";
+            if (checkBox1.Checked == true)
+                select_where_deepl = "translator_m='Deepl' OR translator_w='Deepl'";
+            sql_insert = "SELECT fileinfo FROM Translated";
+            if (select_where_my != "")
             {
-                auth.Enabled = true;
-                Data.Trigger = 0;
+                sql_insert += " WHERE " + select_where_my;
+                if (select_where_deepl != "")
+                    sql_insert += " OR " + select_where_deepl;
             }
-
-            if (Data.Value != "" && Data.Value != null && Data.Trigger == 2)
-            {
-                new_author.Enabled = false;
-                new_author.Text = Data.Value;
-                this.Text = Data.Title;
-                auth.Enabled = false;
-                author_ok.Enabled = false;
-                authorization = true;
-                file_to_trans.Enabled = true;
-                searchbox.Enabled = true;
-
-                //выводим список в комбобоксе
-                SQLiteConnection sqlite_conn;
-                sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-                sqlite_conn.Open();
-                SQLiteCommand sqlite_cmd;
-                sqlite_cmd = sqlite_conn.CreateCommand();
-                string sql_insert = "SELECT fileinfo FROM Translated GROUP by fileinfo"; 
-                sqlite_cmd.CommandText = sql_insert;
-                SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                while (r.Read())
-                    file_to_trans.Items.Add(r["fileinfo"].ToString());
-                r.Close();
-                sqlite_conn.Close();
-                Data.Value = "";
-            }
+            else if (select_where_deepl != "")
+                sql_insert += " WHERE " + select_where_deepl;
+            sql_insert += " GROUP by fileinfo";
+            sqlite_cmd.CommandText = sql_insert;
+            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
+            while (r.Read())
+                file_to_trans.Items.Add(r["fileinfo"].ToString());
+            r.Close();
+            sqlite_conn.Close();
+            gotofile.Enabled = false;
+            search_filename.Enabled = false;
         }
     }
 }

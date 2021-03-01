@@ -13,6 +13,7 @@ using OpenQA.Selenium.Firefox;
 using System.Threading;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Interactions;
+using System.Windows.Forms;
 
 namespace SWToR_RUS
 {
@@ -50,6 +51,8 @@ namespace SWToR_RUS
 
         public string changes;
 
+        public ProgressBar ProgressBar_F1 = Application.OpenForms["Form1"].Controls["ProgressBar1"] as ProgressBar;
+
         public void ConnectDB()
         {
             byte[] array = File.ReadAllBytes("db\\fonts.gfx");
@@ -62,8 +65,7 @@ namespace SWToR_RUS
                 a = ConfigurationManager.AppSettings["sith"];
             if (ConfigurationManager.AppSettings["skill"] != null)
                 a2 = ConfigurationManager.AppSettings["skill"];
-            
-            
+
             string text_en;
             string text_ru_m;
             string text_ru_w;
@@ -127,6 +129,8 @@ namespace SWToR_RUS
             }
             r.Close();
             sqlite_conn.Close();
+            ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Maximum = list.Count));
+            ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Value = 0));
             string str = ConfigurationManager.AppSettings["gamepath"];
             PatchMain(str + "\\Assets\\swtor_maln_global_1.tor", "maln_global_1.tor");
             PatchMain(str + "\\Assets\\swtor_ru-wm_global_1.tor", "ru-wm_global_1.tor");
@@ -338,7 +342,10 @@ namespace SWToR_RUS
                         break;
                     if (fileidcount.Contains(num5))
                     { //Console.WriteLine(num4+"---"+ zsize + "---" + size + "---" + hash + "---" + num5.ToString("X")+ "---"+ num5); 
-                        PackText(fileStream, num4, zsize, size, dbru, hash, num5, endtable, somework); }
+                        PackText(fileStream, num4, zsize, size, dbru, hash, num5, endtable, somework);
+                        if (ProgressBar_F1.Value + 1<=ProgressBar_F1.Maximum)
+                            ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Value += 1));
+                    }
                     else
                     {
                         try

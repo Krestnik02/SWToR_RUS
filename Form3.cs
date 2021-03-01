@@ -30,12 +30,13 @@ namespace SWToR_RUS
         {
             InitializeComponent();
 
-            if(Data.Value != "" && Data.Value != null)
-            {
-                name.Enabled = false;
-                name.Text = Data.Value;
-                Data.Value = "";
-            }
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            name.Text = configuration.AppSettings.Settings["author"].Value.ToString();
+            email.Text = configuration.AppSettings.Settings["email"].Value.ToString();
+            password.Text = configuration.AppSettings.Settings["password"].Value.ToString();
+            if (configuration.AppSettings.Settings["translate_restrict"].Value.ToString() == "1")
+                Translate_Restrict.Checked = true;
+            Check_auth();
         }
 
         public static string HashPassword(string password)
@@ -105,15 +106,19 @@ namespace SWToR_RUS
         public void auth_Click(object sender, EventArgs e)
         {
             string email_box = email.Text, name_box = name.Text, password_box = password.Text;
+            Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            string tr_restrict = "0";
+            if (Translate_Restrict.Checked == true)
+                tr_restrict = "1";
             if (isValid(email_box))
             {
-                if(name_box != "Deepl" && name_box != "deepl" && name_box.Length > 3) {
+                if(name_box != "Deepl" && name_box != "deepl") {
                     using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
                     {
                         conn.Open();
                         if (email_box != "" && name_box != "" && password_box != "")
                         {
-                            string sql_select = "SELECT id, email, name, pass FROM users WHERE email='" + email_box + "' AND name = '" + name_box + "';";
+                            string sql_select = "SELECT id, email, name, pass,status FROM users WHERE email='" + email_box + "' AND name = '" + name_box + "';";
                             MySqlCommand command = new MySqlCommand(sql_select, conn);
                             MySqlDataReader row = command.ExecuteReader();
                             if (row.HasRows)
@@ -122,13 +127,23 @@ namespace SWToR_RUS
                                 {
                                     if (VerifyHashedPassword(row["pass"].ToString(), password_box))
                                     {
-                                        Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                                         configuration.AppSettings.Settings["author"].Value = row["name"].ToString();
                                         configuration.AppSettings.Settings["email"].Value = row["email"].ToString();
                                         configuration.AppSettings.Settings["password"].Value = row["pass"].ToString();
+                                        if (row["status"].ToString() != tr_restrict)
+                                        {
+                                            string sql_update = "UPDATE users SET status='" + tr_restrict + "' WHERE id='" + row["id"].ToString() + "'";
+                                            MySqlCommand update = new MySqlCommand(sql_update, conn);
+                                            update.ExecuteNonQuery();
+                                        }
                                         configuration.Save(ConfigurationSaveMode.Modified);
-                                        MessageBox.Show("Вы успешно авторизованы " + row["name"].ToString(), "Авторизация", MessageBoxButtons.OK);
+                                        MessageBox.Show("Вы успешно авторизованы!", "Авторизация", MessageBoxButtons.OK);
                                         appClosing = 10;
+                                        configuration.AppSettings.Settings["author"].Value = name_box;
+                                        configuration.AppSettings.Settings["email"].Value = email_box;
+                                        configuration.AppSettings.Settings["password"].Value = password_box;
+                                        configuration.AppSettings.Settings["translate_restrict"].Value = tr_restrict;
+                                        configuration.Save(ConfigurationSaveMode.Modified);
                                         Close();
                                     } else
                                     {
@@ -145,7 +160,7 @@ namespace SWToR_RUS
                                 MySqlDataReader row2 = command2.ExecuteReader();
                                 if (row2.HasRows)
                                 {
-                                    MessageBox.Show("Пользователь с такой почтой уже зарегистрирован", "Регистрация", MessageBoxButtons.OK);
+                                    MessageBox.Show("Пользователь с такой почтой уже зарегистрирован!", "Регистрация", MessageBoxButtons.OK);
                                     email.Clear();
                                     row2.Close();
                                 } else
@@ -154,15 +169,15 @@ namespace SWToR_RUS
                                     DialogResult dialogResult = MessageBox.Show("Пользователь не найден, зарегистрироваться?", "Регистрация", MessageBoxButtons.YesNo);
                                     if (dialogResult == DialogResult.Yes)
                                     {
-                                        string sql_insert = "INSERT INTO users(id,name,pass,email,status) VALUES ('0','" + name_box + "','" + HashPassword(password_box) + "','" + email_box + "','0')";
+                                        string sql_insert = "INSERT INTO users(id,name,pass,email,status) VALUES ('0','" + name_box + "','" + HashPassword(password_box) + "','" + email_box + "','" + tr_restrict + "')";
                                         MySqlCommand insert = new MySqlCommand(sql_insert, conn);
                                         insert.ExecuteNonQuery();
-                                        Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                                         configuration.AppSettings.Settings["author"].Value = name_box;
                                         configuration.AppSettings.Settings["email"].Value = email_box;
-                                        configuration.AppSettings.Settings["password"].Value = HashPassword(password_box);
+                                        configuration.AppSettings.Settings["password"].Value = password_box;
+                                        configuration.AppSettings.Settings["translate_restrict"].Value = tr_restrict;
                                         configuration.Save(ConfigurationSaveMode.Modified);
-                                        MessageBox.Show("Вы успешно зарегистрированны " + name_box, "Авторизация", MessageBoxButtons.OK);
+                                        MessageBox.Show("Вы успешно зарегистрированны!", "Авторизация", MessageBoxButtons.OK);
                                         appClosing = 10;
                                         Close();
                                     }
@@ -173,12 +188,13 @@ namespace SWToR_RUS
                     }
                 } else
                 {
-                    MessageBox.Show("Вы не можете авторизоваться под этим именем", "Авторизация", MessageBoxButtons.OK);
+                    MessageBox.Show("Вы не можете авторизоваться под этим именем!", "Авторизация", MessageBoxButtons.OK);
                     if (name.Enabled == false)
                         name.Enabled = true;
                 }
             } else
             {
+                MessageBox.Show("Проверьте правильность написания E-mail!", "Авторизация", MessageBoxButtons.OK);
             }
             
         }
@@ -212,6 +228,34 @@ namespace SWToR_RUS
                 }
             }
             base.OnFormClosing(e);
+        }
+
+        private void email_TextChanged(object sender, EventArgs e)
+        {
+            Check_auth();
+        }
+        private void Check_auth()
+        {
+            if (name.Text != "Deepl" && name.Text != "deepl" && name.Text != "" && email.Text != "" && password.Text != "")
+            {
+                auth.Enabled = true;
+                Translate_Restrict.Enabled = true;
+            }
+            else
+            {
+                auth.Enabled = false;
+                Translate_Restrict.Enabled = false;
+            }
+        }
+
+        private void password_TextChanged(object sender, EventArgs e)
+        {
+            Check_auth();
+        }
+
+        private void name_TextChanged(object sender, EventArgs e)
+        {
+            Check_auth();
         }
     }
 }

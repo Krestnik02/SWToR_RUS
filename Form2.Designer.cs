@@ -76,7 +76,6 @@
             this.html_spec = new System.Windows.Forms.LinkLabel();
             this.My_translate = new System.Windows.Forms.CheckBox();
             this.auth = new System.Windows.Forms.Button();
-            this.author_ok = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.data_trans_file)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -176,7 +175,6 @@
             // file_to_trans
             // 
             this.file_to_trans.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.file_to_trans.Enabled = false;
             this.file_to_trans.FormattingEnabled = true;
             this.file_to_trans.Location = new System.Drawing.Point(199, 6);
             this.file_to_trans.Name = "file_to_trans";
@@ -196,13 +194,12 @@
             // upload_translate
             // 
             this.upload_translate.Enabled = false;
-            this.upload_translate.Location = new System.Drawing.Point(397, 70);
+            this.upload_translate.Location = new System.Drawing.Point(534, 72);
             this.upload_translate.Name = "upload_translate";
-            this.upload_translate.Size = new System.Drawing.Size(171, 47);
+            this.upload_translate.Size = new System.Drawing.Size(171, 43);
             this.upload_translate.TabIndex = 4;
-            this.upload_translate.Text = "Сохранить\\Выгрузить Перевод";
+            this.upload_translate.Text = "Сохранить\\Подготовить Перевод для вырузки";
             this.upload_translate.UseVisualStyleBackColor = true;
-            this.upload_translate.Visible = false;
             this.upload_translate.Click += new System.EventHandler(this.upload_translate_Click);
             // 
             // label2
@@ -260,7 +257,6 @@
             this.fileinfo_user.Name = "fileinfo_user";
             this.fileinfo_user.Size = new System.Drawing.Size(230, 20);
             this.fileinfo_user.TabIndex = 10;
-            this.fileinfo_user.Visible = false;
             this.fileinfo_user.TextChanged += new System.EventHandler(this.fileinfo_user_TextChanged);
             // 
             // label4
@@ -271,7 +267,6 @@
             this.label4.Size = new System.Drawing.Size(92, 13);
             this.label4.TabIndex = 11;
             this.label4.Text = "Название файла";
-            this.label4.Visible = false;
             // 
             // label5
             // 
@@ -352,7 +347,6 @@
             // searchbox
             // 
             this.searchbox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.searchbox.Enabled = false;
             this.searchbox.Location = new System.Drawing.Point(6, 14);
             this.searchbox.Name = "searchbox";
             this.searchbox.Size = new System.Drawing.Size(230, 20);
@@ -571,39 +565,30 @@
             // My_translate
             // 
             this.My_translate.AutoSize = true;
+            this.My_translate.Enabled = false;
             this.My_translate.Location = new System.Drawing.Point(15, 52);
             this.My_translate.Name = "My_translate";
             this.My_translate.Size = new System.Drawing.Size(195, 17);
             this.My_translate.TabIndex = 36;
             this.My_translate.Text = "Показывать только мой перевод";
             this.My_translate.UseVisualStyleBackColor = true;
+            this.My_translate.CheckedChanged += new System.EventHandler(this.My_translate_CheckedChanged);
             // 
             // auth
             // 
-            this.auth.Location = new System.Drawing.Point(574, 70);
+            this.auth.Location = new System.Drawing.Point(346, 72);
             this.auth.Name = "auth";
-            this.auth.Size = new System.Drawing.Size(171, 47);
+            this.auth.Size = new System.Drawing.Size(171, 43);
             this.auth.TabIndex = 37;
-            this.auth.Text = "Авторизация";
+            this.auth.Text = "Настройки автора перевода\\ Авторизация";
             this.auth.UseVisualStyleBackColor = true;
             this.auth.Click += new System.EventHandler(this.auth_Click);
-            // 
-            // author_ok
-            // 
-            this.author_ok.Location = new System.Drawing.Point(346, 95);
-            this.author_ok.Name = "author_ok";
-            this.author_ok.Size = new System.Drawing.Size(47, 21);
-            this.author_ok.TabIndex = 38;
-            this.author_ok.Text = "ОК";
-            this.author_ok.UseVisualStyleBackColor = true;
-            this.author_ok.Click += new System.EventHandler(this.author_ok_Click);
             // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1452, 595);
-            this.Controls.Add(this.author_ok);
             this.Controls.Add(this.auth);
             this.Controls.Add(this.My_translate);
             this.Controls.Add(this.html_spec);
@@ -635,8 +620,7 @@
             this.Controls.Add(this.groupBox2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form2";
-            this.Text = "Редактор - Не Авторизирован";
-            this.Activated += new System.EventHandler(this.Form2_Activated);
+            this.Text = "Редактор";
             ((System.ComponentModel.ISupportInitialize)(this.data_trans_file)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
@@ -695,6 +679,5 @@
         private System.Windows.Forms.LinkLabel html_spec;
         private System.Windows.Forms.CheckBox My_translate;
         private System.Windows.Forms.Button auth;
-        private System.Windows.Forms.Button author_ok;
     }
 }
