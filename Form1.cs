@@ -216,7 +216,7 @@ namespace SWToR_RUS
                             if (RusFontsInstalled == 1)
                                 ins_font.Text = "Удалить шрифты";
                         }
-                        if (launch_status == 1 && RusInstalled == 1) //Производим подготовку файлов для запуска игры, если запущен лаунчер и русификатор установлен
+                        if (steam_game.Checked == true && launch_status == 1 && RusInstalled == 1) //Если версия Steam, Лаунчер запушен и русификатор установлен
                             Steam_Rename();
                     }
                 }
@@ -285,6 +285,15 @@ namespace SWToR_RUS
         }
         public void startWatch_EventArrived(object sender, EventArrivedEventArgs e) //Остлеживаем появление процессов
         {
+            if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "swtor.exe") //Отслеживаем запуск игр
+            {
+                if (steam_game.Checked == false) //Если не steam версия на ходу подменяем файлы
+                {
+                    startWatch.Stop();
+                    Rus_for_orinal_game();
+                }
+            }
+
             if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "launcher.exe") //Отслеживаем запуск лаунчера
             {
                 Invoke((MethodInvoker)delegate
@@ -301,11 +310,75 @@ namespace SWToR_RUS
                         else
                             del_btn.Enabled = true;
                     }
-                    if (RusInstalled == 1) //Производим подготовку файлов для запуска игры, если русификатор установлен
+                    if (steam_game.Checked == true && RusInstalled == 1) //Если версия Steam //Производим подготовку файлов для запуска игры, если русификатор установлен
                         Steam_Rename();
                 });
             }
         }
+        public async void Rus_for_orinal_game() //Для обычной версии программа сама отслеживает запуск игры
+        {
+            ManagementClass managementClass = new ManagementClass("Win32_Process");
+            foreach (ManagementObject instance in managementClass.GetInstances()) //Перебираем процессы в поисках игры
+            {
+                if (instance["Name"].Equals("swtor.exe")) //Собираем параметры и прекращаем процесс
+                {
+                    heh = instance["CommandLine"].ToString();
+                    heh1 = instance["ExecutablePath"].ToString();
+                    arg = heh.Substring(heh.LastIndexOf('"') + 2);
+                    work = heh1.Remove(heh1.Length - 9);
+                    instance.InvokeMethod("Terminate", null);
+                    break;
+                }
+            }
+            if (ServiceController.GetServices().FirstOrDefault((ServiceController s) => s.ServiceName == "BRSptStub") != null) //Отключаем Битрейдер
+            {
+                ServiceController serviceController = new ServiceController("BRSptStub");
+                if (serviceController.Status.Equals(ServiceControllerStatus.Running))
+                {
+                    serviceController.Stop();
+                    serviceController.WaitForStatus(ServiceControllerStatus.Stopped);
+                }
+            }
+            foreach (ManagementObject instance2 in managementClass.GetInstances()) //Отключаем Битрейдер
+            {
+                if (instance2["Name"].Equals("brwc.exe"))
+                {
+                    instance2.InvokeMethod("Terminate", null);
+                    break;
+                }
+            }
+            foreach (ManagementObject instance3 in managementClass.GetInstances()) //Отключаем Битрейдер
+            {
+                if (instance3["Name"].Equals("BRSptSvc.exe"))
+                {
+                    instance3.InvokeMethod("Terminate", null);
+                    break;
+                }
+            }
+            if (gender == 1) //Подменяем аргументы в зависимости от пола персонажа
+                arg = arg.Replace("main,en-us", "maln,ru-wm");
+            else if (gender == 0)
+                arg = arg.Replace("main,en-us", "maln,ru-ww");
+            startInfo.FileName = heh1;
+            startInfo.Arguments = arg;
+            startInfo.WorkingDirectory = work;
+            string hash_in_config = Config.AppSettings.Settings["hash"].Value;
+            string hash_original = CalculateMD5(GamePath + "\\Assets\\swtor_main_global_1.tor");
+            if (hash_in_config == hash_original) //Повторно запускаем игру с подменёнными параметрами
+                Process.Start(startInfo);
+            else //Хэши не совпадают, запускаем переустановку русификатора в автоматическом режиме
+            {
+                Thread thread = new Thread((ThreadStart)delegate
+                {
+                    LogBox.AppendText("Hash не совпадает. Производится переустановка русификатора и игра запустится автоматически.\n");
+                });
+                thread.IsBackground = true;
+                thread.Start();
+                await install();
+                Process.Start(startInfo);
+            }
+        }
+
         public void CreateConfig() //Создаём конфигурационный файл
         {
             StringBuilder stringBuilder = new StringBuilder();
@@ -364,7 +437,8 @@ namespace SWToR_RUS
                 File.Move(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup", GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
                 ins_font.Text = "Установить шрифт";
             }
-            TryFix();
+            if (steam_game.Checked == true) //Возвращаем файлы в исходное положение
+                TryFix();
             int num = EndOff(GamePath + "\\Assets\\swtor_en-us_global_1.tor"); //Проверяем оригинальные ли файлы игры
             int num2 = EndOff(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
             if (num == 0 || num2 == 0)
