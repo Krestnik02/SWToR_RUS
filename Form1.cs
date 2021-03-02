@@ -1377,6 +1377,7 @@ namespace SWToR_RUS
                             {
                                 blocked_users.Add(reader1["name"].ToString());
                             }
+                            reader1.Close();
                         }
                         sql = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
                         MySqlCommand command2 = new MySqlCommand(sql, conn);
