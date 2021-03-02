@@ -686,7 +686,7 @@ namespace SWToR_RUS
                     textInputElement.SendKeys(text);
 
                     var copyElement = driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-toolbar-copy\"]/button"));
-                    while (driver.FindElement(By.XPath("//*[@class=\"lmt__text\"]/div[2]/div[3]/div[5]")).GetAttribute("class") == "lmt__mobile_share_container lmt__mobile_share_container--inactive")
+                    while (driver.FindElement(By.XPath("//*[@class=\"lmt__text\"]/div[2]/div[3]/div[5]")).GetAttribute("class") == "lmt__mobile_share_container lmt--mobile-hidden lmt__mobile_share_container--inactive")
                     {
                         Thread.Sleep(500);
                     }
