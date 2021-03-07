@@ -67,15 +67,16 @@ namespace SWToR_RUS
             this.ChooseMen = new System.Windows.Forms.RadioButton();
             this.ChooseWomen = new System.Windows.Forms.RadioButton();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.dis_skills = new System.Windows.Forms.CheckBox();
+            this.Dis_non_dialoge = new System.Windows.Forms.CheckBox();
+            this.Dis_items = new System.Windows.Forms.CheckBox();
+            this.Dis_skills = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.ChooseSit = new System.Windows.Forms.RadioButton();
             this.ChooseSith = new System.Windows.Forms.RadioButton();
             this.ChangePathButton = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.GamePathTextBox = new System.Windows.Forms.TextBox();
-            this.ins_font = new System.Windows.Forms.Button();
+            this.Ins_font = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.label6 = new System.Windows.Forms.Label();
             this.row_translated = new System.Windows.Forms.Label();
@@ -111,6 +112,7 @@ namespace SWToR_RUS
             // 
             // Install_btn
             // 
+            this.Install_btn.Enabled = false;
             this.Install_btn.Location = new System.Drawing.Point(175, 204);
             this.Install_btn.Name = "Install_btn";
             this.Install_btn.Size = new System.Drawing.Size(112, 43);
@@ -203,7 +205,7 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.auth_translate, "При загрузке новых строк перевода с сервера\r\nне изменяются строки автор которых з" +
         "апретил\r\nих редактирование.");
             this.auth_translate.UseVisualStyleBackColor = true;
-            this.auth_translate.CheckedChanged += new System.EventHandler(this.auth_translate_CheckedChanged);
+            this.auth_translate.CheckedChanged += new System.EventHandler(this.Auth_translate_CheckedChanged);
             // 
             // changes
             // 
@@ -218,23 +220,23 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.changes, "При выходе новых патчей к игре происходит\r\nпроверка изменились ли какие-то старые" +
         "\r\nстроки текста или нет.");
             this.changes.UseVisualStyleBackColor = true;
-            this.changes.CheckedChanged += new System.EventHandler(this.changes_CheckedChanged);
+            this.changes.CheckedChanged += new System.EventHandler(this.Changes_CheckedChanged);
             // 
             // auto_translate
             // 
             this.auto_translate.AutoSize = true;
             this.auto_translate.Checked = true;
             this.auto_translate.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.auto_translate.Enabled = false;
             this.auto_translate.Location = new System.Drawing.Point(6, 30);
             this.auto_translate.Name = "auto_translate";
             this.auto_translate.Size = new System.Drawing.Size(134, 17);
             this.auto_translate.TabIndex = 19;
             this.auto_translate.Text = "Авто-перевод Патчей";
             this.toolTip1.SetToolTip(this.auto_translate, "При выходе новых патчей к игре русификатор\r\nсам переведёт все новые тексты с помо" +
-        "щью\r\nпереводчика (это длительный процесс)");
+        "щью\r\nпереводчика (это длительный процесс)\r\n!!!Требуется наличие в системе браузе" +
+        "ра Firefox!!!");
             this.auto_translate.UseVisualStyleBackColor = true;
-            this.auto_translate.CheckedChanged += new System.EventHandler(this.auto_translate_CheckedChanged);
+            this.auto_translate.CheckedChanged += new System.EventHandler(this.Auto_translate_CheckedChanged);
             // 
             // recover
             // 
@@ -245,11 +247,10 @@ namespace SWToR_RUS
             this.recover.Text = "Восстановить БД";
             this.toolTip1.SetToolTip(this.recover, "Восстанавливает резервную копию локально\r\nбазы переводов.");
             this.recover.UseVisualStyleBackColor = true;
-            this.recover.Click += new System.EventHandler(this.recover_Click);
+            this.recover.Click += new System.EventHandler(this.Recover_Click);
             // 
             // upload_from_server
             // 
-            this.upload_from_server.Enabled = false;
             this.upload_from_server.Location = new System.Drawing.Point(8, 132);
             this.upload_from_server.Name = "upload_from_server";
             this.upload_from_server.Size = new System.Drawing.Size(210, 29);
@@ -258,7 +259,7 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.upload_from_server, "Загружает новые переводы с сервера на ваш ПК.\r\nПосле загрузки обязательно переуст" +
         "ановите русификатор.");
             this.upload_from_server.UseVisualStyleBackColor = true;
-            this.upload_from_server.Click += new System.EventHandler(this.upload_from_server_Click);
+            this.upload_from_server.Click += new System.EventHandler(this.Upload_from_server_Click);
             // 
             // upload_to_server
             // 
@@ -270,7 +271,7 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.upload_to_server, "Выгружает все переводы пользователя,\r\nкоторые находятся в папке user_translation." +
         "");
             this.upload_to_server.UseVisualStyleBackColor = true;
-            this.upload_to_server.Click += new System.EventHandler(this.upload_to_server_Click);
+            this.upload_to_server.Click += new System.EventHandler(this.Upload_to_server_Click);
             // 
             // editor_btn
             // 
@@ -281,7 +282,7 @@ namespace SWToR_RUS
             this.editor_btn.Text = "Редактор Перевода";
             this.toolTip1.SetToolTip(this.editor_btn, "Редактор переводов");
             this.editor_btn.UseVisualStyleBackColor = true;
-            this.editor_btn.Click += new System.EventHandler(this.editor_btn_Click_1);
+            this.editor_btn.Click += new System.EventHandler(this.Editor_btn_Click_1);
             // 
             // google_opt
             // 
@@ -296,7 +297,7 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.google_opt, "Если эта опция не включена, в игре будет\r\nтолько перевод того, что перевели люди." +
         "");
             this.google_opt.UseVisualStyleBackColor = true;
-            this.google_opt.CheckedChanged += new System.EventHandler(this.google_opt_CheckedChanged);
+            this.google_opt.CheckedChanged += new System.EventHandler(this.Google_opt_CheckedChanged);
             // 
             // groupBox4
             // 
@@ -335,36 +336,48 @@ namespace SWToR_RUS
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.checkBox1);
-            this.groupBox3.Controls.Add(this.dis_skills);
+            this.groupBox3.Controls.Add(this.Dis_non_dialoge);
+            this.groupBox3.Controls.Add(this.Dis_items);
+            this.groupBox3.Controls.Add(this.Dis_skills);
             this.groupBox3.Location = new System.Drawing.Point(6, 172);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(159, 64);
+            this.groupBox3.Size = new System.Drawing.Size(159, 81);
             this.groupBox3.TabIndex = 6;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Отключить перевод";
             // 
-            // checkBox1
+            // Dis_non_dialoge
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(6, 35);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(145, 17);
-            this.checkBox1.TabIndex = 1;
-            this.checkBox1.Text = "Предметы (и описание)";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.Visible = false;
+            this.Dis_non_dialoge.AutoSize = true;
+            this.Dis_non_dialoge.Location = new System.Drawing.Point(5, 57);
+            this.Dis_non_dialoge.Name = "Dis_non_dialoge";
+            this.Dis_non_dialoge.Size = new System.Drawing.Size(144, 17);
+            this.Dis_non_dialoge.TabIndex = 2;
+            this.Dis_non_dialoge.Text = "Всего, кроме диалогов";
+            this.Dis_non_dialoge.UseVisualStyleBackColor = true;
+            this.Dis_non_dialoge.CheckedChanged += new System.EventHandler(this.Dis_non_dialoge_CheckedChanged);
             // 
-            // dis_skills
+            // Dis_items
             // 
-            this.dis_skills.AutoSize = true;
-            this.dis_skills.Location = new System.Drawing.Point(6, 16);
-            this.dis_skills.Name = "dis_skills";
-            this.dis_skills.Size = new System.Drawing.Size(66, 17);
-            this.dis_skills.TabIndex = 0;
-            this.dis_skills.Text = "Умения";
-            this.dis_skills.UseVisualStyleBackColor = true;
-            this.dis_skills.CheckedChanged += new System.EventHandler(this.dis_skills_CheckedChanged);
+            this.Dis_items.AutoSize = true;
+            this.Dis_items.Location = new System.Drawing.Point(5, 34);
+            this.Dis_items.Name = "Dis_items";
+            this.Dis_items.Size = new System.Drawing.Size(145, 17);
+            this.Dis_items.TabIndex = 1;
+            this.Dis_items.Text = "Предметы (и описание)";
+            this.Dis_items.UseVisualStyleBackColor = true;
+            this.Dis_items.CheckedChanged += new System.EventHandler(this.Dis_items_CheckedChanged);
+            // 
+            // Dis_skills
+            // 
+            this.Dis_skills.AutoSize = true;
+            this.Dis_skills.Location = new System.Drawing.Point(5, 16);
+            this.Dis_skills.Name = "Dis_skills";
+            this.Dis_skills.Size = new System.Drawing.Size(66, 17);
+            this.Dis_skills.TabIndex = 0;
+            this.Dis_skills.Text = "Умения";
+            this.Dis_skills.UseVisualStyleBackColor = true;
+            this.Dis_skills.CheckedChanged += new System.EventHandler(this.Dis_skills_CheckedChanged);
             // 
             // groupBox2
             // 
@@ -430,17 +443,18 @@ namespace SWToR_RUS
             this.GamePathTextBox.TabIndex = 0;
             this.GamePathTextBox.TextChanged += new System.EventHandler(this.GamePathTextBox_TextChanged);
             // 
-            // ins_font
+            // Ins_font
             // 
-            this.ins_font.Location = new System.Drawing.Point(197, 256);
-            this.ins_font.Name = "ins_font";
-            this.ins_font.Size = new System.Drawing.Size(210, 29);
-            this.ins_font.TabIndex = 22;
-            this.ins_font.Text = "Установить шрифт";
-            this.toolTip1.SetToolTip(this.ins_font, "Установить в игру только шрифт,\r\nдля возможности писать в чате на кириллице\r\n!!!Н" +
+            this.Ins_font.Enabled = false;
+            this.Ins_font.Location = new System.Drawing.Point(197, 256);
+            this.Ins_font.Name = "Ins_font";
+            this.Ins_font.Size = new System.Drawing.Size(210, 29);
+            this.Ins_font.TabIndex = 22;
+            this.Ins_font.Text = "Установить шрифт";
+            this.toolTip1.SetToolTip(this.Ins_font, "Установить в игру только шрифт,\r\nдля возможности писать в чате на кириллице\r\n!!!Н" +
         "е пишите на кириллице в общих чатах.");
-            this.ins_font.UseVisualStyleBackColor = true;
-            this.ins_font.Click += new System.EventHandler(this.ins_font_Click);
+            this.Ins_font.UseVisualStyleBackColor = true;
+            this.Ins_font.Click += new System.EventHandler(this.Ins_font_Click);
             // 
             // groupBox5
             // 
@@ -487,7 +501,7 @@ namespace SWToR_RUS
             this.linkLabel3.TabIndex = 13;
             this.linkLabel3.TabStop = true;
             this.linkLabel3.Text = "Гороховский Антон";
-            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
+            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel3_LinkClicked);
             // 
             // label5
             // 
@@ -507,7 +521,7 @@ namespace SWToR_RUS
             this.linkLabel2.TabIndex = 15;
             this.linkLabel2.TabStop = true;
             this.linkLabel2.Text = "JKC";
-            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel2_LinkClicked);
             // 
             // linkLabel1
             // 
@@ -518,7 +532,7 @@ namespace SWToR_RUS
             this.linkLabel1.TabIndex = 13;
             this.linkLabel1.TabStop = true;
             this.linkLabel1.Text = "Togruth";
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabel1_LinkClicked);
             // 
             // label4
             // 
@@ -531,6 +545,7 @@ namespace SWToR_RUS
             // 
             // del_btn
             // 
+            this.del_btn.Enabled = false;
             this.del_btn.Location = new System.Drawing.Point(318, 204);
             this.del_btn.Name = "del_btn";
             this.del_btn.Size = new System.Drawing.Size(112, 43);
@@ -538,7 +553,7 @@ namespace SWToR_RUS
             this.del_btn.Text = "Удалить";
             this.toolTip1.SetToolTip(this.del_btn, "Удалить русификатор");
             this.del_btn.UseVisualStyleBackColor = true;
-            this.del_btn.Click += new System.EventHandler(this.del_btn_Click);
+            this.del_btn.Click += new System.EventHandler(this.Del_btn_Click);
             // 
             // ProgressBar1
             // 
@@ -568,14 +583,14 @@ namespace SWToR_RUS
             // 
             // db_convertor
             // 
-            this.db_convertor.Location = new System.Drawing.Point(492, 369);
+            this.db_convertor.Location = new System.Drawing.Point(41, 259);
             this.db_convertor.Name = "db_convertor";
             this.db_convertor.Size = new System.Drawing.Size(75, 23);
             this.db_convertor.TabIndex = 12;
             this.db_convertor.Text = "button1";
             this.db_convertor.UseVisualStyleBackColor = true;
             this.db_convertor.Visible = false;
-            this.db_convertor.Click += new System.EventHandler(this.db_convertor_Click);
+            this.db_convertor.Click += new System.EventHandler(this.Db_convertor_Click);
             // 
             // btn_info
             // 
@@ -585,7 +600,7 @@ namespace SWToR_RUS
             this.btn_info.TabIndex = 13;
             this.btn_info.Text = "Информация";
             this.btn_info.UseVisualStyleBackColor = true;
-            this.btn_info.Click += new System.EventHandler(this.btn_info_Click);
+            this.btn_info.Click += new System.EventHandler(this.Btn_info_Click);
             // 
             // info_trans
             // 
@@ -605,7 +620,7 @@ namespace SWToR_RUS
             this.pictureBox2.Size = new System.Drawing.Size(149, 152);
             this.pictureBox2.TabIndex = 16;
             this.pictureBox2.TabStop = false;
-            this.pictureBox2.Click += new System.EventHandler(this.pictureBox2_Click);
+            this.pictureBox2.Click += new System.EventHandler(this.PictureBox2_Click);
             // 
             // label1
             // 
@@ -617,7 +632,7 @@ namespace SWToR_RUS
             this.label1.Size = new System.Drawing.Size(115, 24);
             this.label1.TabIndex = 17;
             this.label1.Text = "Инструкция";
-            this.label1.Click += new System.EventHandler(this.label1_Click);
+            this.label1.Click += new System.EventHandler(this.Label1_Click);
             // 
             // Updater
             // 
@@ -654,7 +669,7 @@ namespace SWToR_RUS
             this.vk_link.TabIndex = 23;
             this.vk_link.TabStop = false;
             this.toolTip1.SetToolTip(this.vk_link, "Оффициальная группа ВК");
-            this.vk_link.Click += new System.EventHandler(this.vk_link_Click);
+            this.vk_link.Click += new System.EventHandler(this.Vk_link_Click);
             // 
             // discord_link
             // 
@@ -667,7 +682,7 @@ namespace SWToR_RUS
             this.discord_link.TabIndex = 24;
             this.discord_link.TabStop = false;
             this.toolTip1.SetToolTip(this.discord_link, "Офиициальный Discord канал");
-            this.discord_link.Click += new System.EventHandler(this.discord_link_Click);
+            this.discord_link.Click += new System.EventHandler(this.Discord_link_Click);
             // 
             // Form1
             // 
@@ -677,7 +692,7 @@ namespace SWToR_RUS
             this.ClientSize = new System.Drawing.Size(854, 361);
             this.Controls.Add(this.discord_link);
             this.Controls.Add(this.vk_link);
-            this.Controls.Add(this.ins_font);
+            this.Controls.Add(this.Ins_font);
             this.Controls.Add(this.Update_app);
             this.Controls.Add(this.Updater);
             this.Controls.Add(this.label1);
@@ -755,7 +770,7 @@ namespace SWToR_RUS
         private System.Windows.Forms.CheckBox google_opt;
         private System.Windows.Forms.RichTextBox info_trans;
         private System.Windows.Forms.Button editor_btn;
-        private System.Windows.Forms.CheckBox dis_skills;
+        private System.Windows.Forms.CheckBox Dis_skills;
 /*        private System.Windows.Forms.PictureBox pictureBox1;*/
         private System.Windows.Forms.Button upload_to_server;
         private System.Windows.Forms.Button upload_from_server;
@@ -769,12 +784,13 @@ namespace SWToR_RUS
         private System.Windows.Forms.CheckBox auto_translate;
         private System.Windows.Forms.CheckBox steam_game;
         private System.Windows.Forms.CheckBox changes;
-        private System.Windows.Forms.Button ins_font;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox Dis_items;
         private System.Windows.Forms.CheckBox auth_translate;
         private System.Windows.Forms.PictureBox vk_link;
         private System.Windows.Forms.PictureBox discord_link;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.CheckBox Dis_non_dialoge;
+        private System.Windows.Forms.Button Ins_font;
     }
 }
 

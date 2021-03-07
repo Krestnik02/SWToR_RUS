@@ -55,7 +55,7 @@ namespace SWToR_RUS
             this.email.Name = "email";
             this.email.Size = new System.Drawing.Size(230, 20);
             this.email.TabIndex = 14;
-            this.email.TextChanged += new System.EventHandler(this.email_TextChanged);
+            this.email.TextChanged += new System.EventHandler(this.Email_TextChanged);
             // 
             // label2
             // 
@@ -73,7 +73,7 @@ namespace SWToR_RUS
             this.password.PasswordChar = '*';
             this.password.Size = new System.Drawing.Size(230, 20);
             this.password.TabIndex = 16;
-            this.password.TextChanged += new System.EventHandler(this.password_TextChanged);
+            this.password.TextChanged += new System.EventHandler(this.Password_TextChanged);
             // 
             // auth
             // 
@@ -84,7 +84,7 @@ namespace SWToR_RUS
             this.auth.TabIndex = 38;
             this.auth.Text = "Авторизация";
             this.auth.UseVisualStyleBackColor = true;
-            this.auth.Click += new System.EventHandler(this.auth_Click);
+            this.auth.Click += new System.EventHandler(this.Auth_Click);
             // 
             // label3
             // 
@@ -101,7 +101,7 @@ namespace SWToR_RUS
             this.name.Name = "name";
             this.name.Size = new System.Drawing.Size(230, 20);
             this.name.TabIndex = 18;
-            this.name.TextChanged += new System.EventHandler(this.name_TextChanged);
+            this.name.TextChanged += new System.EventHandler(this.Name_TextChanged);
             // 
             // Translate_Restrict
             // 

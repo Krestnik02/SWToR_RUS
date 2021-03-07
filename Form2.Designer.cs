@@ -112,9 +112,9 @@
             this.data_trans_file.Name = "data_trans_file";
             this.data_trans_file.Size = new System.Drawing.Size(1450, 402);
             this.data_trans_file.TabIndex = 0;
-            this.data_trans_file.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.data_trans_file_CellBeginEdit);
-            this.data_trans_file.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.data_trans_file_CellEndEdit);
-            this.data_trans_file.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.data_trans_file_CellEnter);
+            this.data_trans_file.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.Data_trans_file_CellBeginEdit);
+            this.data_trans_file.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.Data_trans_file_CellEndEdit);
+            this.data_trans_file.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.Data_trans_file_CellEnter);
             // 
             // key
             // 
@@ -180,7 +180,7 @@
             this.file_to_trans.Name = "file_to_trans";
             this.file_to_trans.Size = new System.Drawing.Size(523, 21);
             this.file_to_trans.TabIndex = 1;
-            this.file_to_trans.SelectedIndexChanged += new System.EventHandler(this.file_to_trans_SelectedIndexChanged);
+            this.file_to_trans.SelectedIndexChanged += new System.EventHandler(this.File_to_trans_SelectedIndexChanged);
             // 
             // label1
             // 
@@ -200,7 +200,7 @@
             this.upload_translate.TabIndex = 4;
             this.upload_translate.Text = "Сохранить\\Подготовить Перевод для вырузки";
             this.upload_translate.UseVisualStyleBackColor = true;
-            this.upload_translate.Click += new System.EventHandler(this.upload_translate_Click);
+            this.upload_translate.Click += new System.EventHandler(this.Upload_translate_Click);
             // 
             // label2
             // 
@@ -248,7 +248,7 @@
             this.lst_font.Name = "lst_font";
             this.lst_font.Size = new System.Drawing.Size(46, 21);
             this.lst_font.TabIndex = 9;
-            this.lst_font.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
+            this.lst_font.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
             // 
             // fileinfo_user
             // 
@@ -257,7 +257,7 @@
             this.fileinfo_user.Name = "fileinfo_user";
             this.fileinfo_user.Size = new System.Drawing.Size(230, 20);
             this.fileinfo_user.TabIndex = 10;
-            this.fileinfo_user.TextChanged += new System.EventHandler(this.fileinfo_user_TextChanged);
+            this.fileinfo_user.TextChanged += new System.EventHandler(this.Fileinfo_user_TextChanged);
             // 
             // label4
             // 
@@ -285,7 +285,7 @@
             this.new_author.Size = new System.Drawing.Size(230, 20);
             this.new_author.TabIndex = 13;
             this.new_author.Text = "Напишите своё имя или оставьте как есть";
-            this.new_author.Click += new System.EventHandler(this.new_author_Click);
+            this.new_author.Click += new System.EventHandler(this.New_author_Click);
             // 
             // label6
             // 
@@ -305,7 +305,7 @@
             this.page_lst.Name = "page_lst";
             this.page_lst.Size = new System.Drawing.Size(64, 21);
             this.page_lst.TabIndex = 15;
-            this.page_lst.SelectedIndexChanged += new System.EventHandler(this.page_lst_SelectedIndexChanged);
+            this.page_lst.SelectedIndexChanged += new System.EventHandler(this.Page_lst_SelectedIndexChanged);
             // 
             // label7
             // 
@@ -331,7 +331,7 @@
             this.colrowonpage.Name = "colrowonpage";
             this.colrowonpage.Size = new System.Drawing.Size(59, 21);
             this.colrowonpage.TabIndex = 17;
-            this.colrowonpage.SelectedIndexChanged += new System.EventHandler(this.colrowonpage_SelectedIndexChanged);
+            this.colrowonpage.SelectedIndexChanged += new System.EventHandler(this.Colrowonpage_SelectedIndexChanged);
             // 
             // checkBox1
             // 
@@ -342,7 +342,7 @@
             this.checkBox1.TabIndex = 18;
             this.checkBox1.Text = "Показывать только Перевод Deepl";
             this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.CheckBox1_CheckedChanged);
             // 
             // searchbox
             // 
@@ -351,7 +351,7 @@
             this.searchbox.Name = "searchbox";
             this.searchbox.Size = new System.Drawing.Size(230, 20);
             this.searchbox.TabIndex = 20;
-            this.searchbox.TextChanged += new System.EventHandler(this.searchbox_TextChanged);
+            this.searchbox.TextChanged += new System.EventHandler(this.Searchbox_TextChanged);
             // 
             // search_button
             // 
@@ -362,7 +362,7 @@
             this.search_button.TabIndex = 21;
             this.search_button.Text = "Найти";
             this.search_button.UseVisualStyleBackColor = true;
-            this.search_button.Click += new System.EventHandler(this.search_button_Click);
+            this.search_button.Click += new System.EventHandler(this.Search_button_Click);
             // 
             // groupBox1
             // 
@@ -410,7 +410,7 @@
             this.search_filename.TabIndex = 23;
             this.search_filename.Text = "В каком файле эта строка?";
             this.search_filename.UseVisualStyleBackColor = true;
-            this.search_filename.Click += new System.EventHandler(this.search_filename_Click);
+            this.search_filename.Click += new System.EventHandler(this.Search_filename_Click);
             // 
             // gotofile
             // 
@@ -422,7 +422,7 @@
             this.gotofile.TabIndex = 24;
             this.gotofile.Text = "Перейти к файлу";
             this.gotofile.UseVisualStyleBackColor = true;
-            this.gotofile.Click += new System.EventHandler(this.gotofile_Click);
+            this.gotofile.Click += new System.EventHandler(this.Gotofile_Click);
             // 
             // file_name_search
             // 
@@ -500,7 +500,7 @@
             this.export.TabIndex = 30;
             this.export.Text = "Экспорт в xml";
             this.export.UseVisualStyleBackColor = true;
-            this.export.Click += new System.EventHandler(this.export_Click);
+            this.export.Click += new System.EventHandler(this.Export_Click);
             // 
             // label8
             // 
@@ -537,7 +537,7 @@
             this.tor_site.TabIndex = 33;
             this.tor_site.TabStop = true;
             this.tor_site.Text = "База данных";
-            this.tor_site.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.tor_site_LinkClicked);
+            this.tor_site.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.Tor_site_LinkClicked);
             // 
             // label9
             // 
@@ -560,7 +560,7 @@
             this.html_spec.TabIndex = 35;
             this.html_spec.TabStop = true;
             this.html_spec.Text = "Спецсимволы html";
-            this.html_spec.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.html_spec_LinkClicked);
+            this.html_spec.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.Html_spec_LinkClicked);
             // 
             // My_translate
             // 
@@ -582,7 +582,7 @@
             this.auth.TabIndex = 37;
             this.auth.Text = "Настройки автора перевода\\ Авторизация";
             this.auth.UseVisualStyleBackColor = true;
-            this.auth.Click += new System.EventHandler(this.auth_Click);
+            this.auth.Click += new System.EventHandler(this.Auth_Click);
             // 
             // Form2
             // 

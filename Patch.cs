@@ -58,6 +58,8 @@ namespace SWToR_RUS
             byte[] array = File.ReadAllBytes("db\\fonts.gfx");
             string a = "0";
             string a2 = "0";
+            string dis_items = "0";
+            string non_dialoge="0";
             int z = 290505;
             int f = 465311;
             List<uint> list = new List<uint>();
@@ -65,7 +67,10 @@ namespace SWToR_RUS
                 a = ConfigurationManager.AppSettings["sith"];
             if (ConfigurationManager.AppSettings["skill"] != null)
                 a2 = ConfigurationManager.AppSettings["skill"];
-
+            if (ConfigurationManager.AppSettings["items"] != null)
+                dis_items = ConfigurationManager.AppSettings["items"];
+            if (ConfigurationManager.AppSettings["non_dialoge"] != null)
+                non_dialoge = ConfigurationManager.AppSettings["non_dialoge"];
             string text_en;
             string text_ru_m;
             string text_ru_w;
@@ -73,18 +78,37 @@ namespace SWToR_RUS
             string translator_w;
             string sql_insert;
             SQLiteConnection sqlite_conn;
-            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
+            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True;");
             sqlite_conn.Open();
             SQLiteCommand sqlite_cmd;
             sqlite_cmd = sqlite_conn.CreateCommand();
-            if (ConfigurationManager.AppSettings["google"] != "1" && a2 == "2")
-                sql_insert = "SELECT hash,fileinfo,key_unic,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE hash!='2169804141' AND hash!='2477239663' AND hash!='1816839038' AND hash!='2853062561' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
-            else if (a2 == "2")
-                sql_insert = "SELECT hash,fileinfo,key_unic,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE hash!='2169804141' AND hash!='2477239663' AND hash!='1816839038' AND hash!='2853062561'";
-            else if (ConfigurationManager.AppSettings["google"] != "1")
-                sql_insert = "SELECT hash,fileinfo,key_unic,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE translator_m!='Deepl' OR translator_w!='Deepl'";
+            sql_insert = "SELECT hash,fileinfo,key_unic,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE ";
+            if (ConfigurationManager.AppSettings["google"] != "1")
+            {
+                if(a2 == "2" && dis_items == "1")
+                    sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
+                else if (a2 == "2")
+                    sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
+                else if (dis_items == "1")
+                    sql_insert += "fileinfo!='itm.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
+                else if (non_dialoge=="1")
+                    sql_insert += "fileinfo like 'cnv%' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
+                else
+                    sql_insert += "translator_m!='Deepl' OR translator_w!='Deepl'";
+            }
             else
-                sql_insert = "SELECT hash,fileinfo,key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated";
+            {
+                if (a2 == "2" && dis_items == "1")
+                    sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb'";
+                else if (a2 == "2")
+                    sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb'";
+                else if (dis_items == "1")
+                    sql_insert += "fileinfo!='itm.stb'";
+                else if (non_dialoge == "1")
+                    sql_insert += "fileinfo like 'cnv%'";
+                else
+                    sql_insert = "SELECT hash,fileinfo,key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated";
+            }
             sqlite_cmd.CommandText = sql_insert;
             SQLiteDataReader r = sqlite_cmd.ExecuteReader();
             while (r.Read())
@@ -99,8 +123,8 @@ namespace SWToR_RUS
                     text_ru_w = text_ru_m;
                 if (a == "1")
                 {
-                    text_ru_m = sith(text_ru_m);
-                    text_ru_w = sith(text_ru_w);
+                    text_ru_m = Sith(text_ru_m);
+                    text_ru_w = Sith(text_ru_w);
                 }
                 if (!dictionary_xml_m.ContainsKey(vOut))
                 {
@@ -128,6 +152,7 @@ namespace SWToR_RUS
                     list.Add(hash_g);
             }
             r.Close();
+            sqlite_cmd.Dispose();
             sqlite_conn.Close();
             ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Maximum = list.Count));
             ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Value = 0));
@@ -158,7 +183,7 @@ namespace SWToR_RUS
             PatchGfx(str + "\\Assets\\swtor_maln_gfx_assets_1.tor", array, z, f);
         }
 
-        public string sith(string s) //Ситх или Сит
+        public string Sith(string s)//Ситх или Сит
         {
             StringBuilder stringBuilder = new StringBuilder(s);
             stringBuilder.Replace("итхи", "иты");
@@ -167,7 +192,8 @@ namespace SWToR_RUS
             stringBuilder.Replace("СИТХ", "СИТ");
             return stringBuilder.ToString();
         }
-        public void PatchGfx(string filename, byte[] dd, int z, int f) //Добавляет русский FONT
+
+        public void PatchGfx(string filename, byte[] dd, int z, int f)//Добавляет русский FONT
         {
             FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite);
             int num = EndOff(fileStream);
@@ -188,6 +214,7 @@ namespace SWToR_RUS
             binaryWriter.Close();
             fileStream.Close();
         }
+
         public int EndOff(FileStream fileStream)
         {
             int result = 0;
@@ -266,7 +293,8 @@ namespace SWToR_RUS
             binaryReader.Close();
             fileStream.Close();
         }
-        public void PatchMain(string filename, string replace) //Подменяет ссылки оригинальных файлов на изменённые
+
+        public void PatchMain(string filename, string replace)//Подменяет ссылки оригинальных файлов на изменённые
         {
             FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite);
             BinaryReader binaryReader = new BinaryReader(fileStream);
@@ -297,7 +325,7 @@ namespace SWToR_RUS
             binaryReader.Close();
             fileStream.Close();
         }
-        private ulong uniqueId(long left, short right)
+        private ulong UniqueId(long left, short right)
         {
             return (ulong)((long)((ulong)((left + right) * (left + right + 1)) / 2uL) + left);
         }
@@ -409,7 +437,7 @@ namespace SWToR_RUS
                     binaryReader2.BaseStream.Seek(num6, SeekOrigin.Begin);
                     byte[] bytes = binaryReader2.ReadBytes(num5);
                     string text = Encoding.UTF8.GetString(bytes).Replace("\n", "\\n");
-                    ulong key = uniqueId(num4, b);
+                    ulong key = UniqueId(num4, b);
                     if (changes == "1")
                     {
                         if (dictionary_en.TryGetValue(key, out string _))
@@ -427,7 +455,6 @@ namespace SWToR_RUS
                                 change_value = "0";
                         }
                     }
-
                     if (dbd.TryGetValue(key, out string _))
                     {
                         dictionary.Add(key, dbd[key]);                       
@@ -524,9 +551,6 @@ namespace SWToR_RUS
                             file_for_exam.WriteLine(tmp_base);
                         }
                     }*/
-
-
-
                 }
                 binaryReader2.BaseStream.Position = position;
                 num3++;
@@ -592,10 +616,10 @@ namespace SWToR_RUS
 
                     }
                 }
-            hhh(fileStream, array3, newzsize, newsize, hash2, hash1, endtable);
+            Hhh(fileStream, array3, newzsize, newsize, hash2, hash1, endtable);
         }
 
-        public void hhh(FileStream fileStream, byte[] z, int newzsize, int newsize, uint hash2, uint hash1, int endtable)
+        public void Hhh(FileStream fileStream, byte[] z, int newzsize, int newsize, uint hash2, uint hash1, int endtable)
         {
             BinaryWriter binaryWriter = new BinaryWriter(fileStream);
             uint textoffset = (uint)fileStream.Length;
@@ -630,8 +654,10 @@ namespace SWToR_RUS
                     Deepl_First_time = 0;
                     FirefoxOptions options = new FirefoxOptions();
                     options.AddArguments("--headless");
-                    driver = new FirefoxDriver(options);
-                    driver.Url = "https://deepl.com/translator";
+                    driver = new FirefoxDriver(options)
+                    {
+                        Url = "https://deepl.com/translator"
+                    };
 
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
@@ -704,7 +730,7 @@ namespace SWToR_RUS
                 else
                     return outputElements;
             }
-            else if (translator_system == "Promt")
+            /*else if (translator_system == "Promt")
             {
                 Thread.Sleep(1000);
                 var baseAddress = "https://www.translate.ru/api/soap/getTranslation";
@@ -713,7 +739,7 @@ namespace SWToR_RUS
                 http.ContentType = "application/json";
                 http.Method = "POST";
 
-                string parsedContent = "{ dirCode:'au-ru', template:'General', text:'" + WebUtility.HtmlEncode(text) + "', lang:'ru', limit:'3000',useAutoDetect:true, key:'123', ts:'MainSite',tid:'', IsMobile:false}";
+                string parsedContent = "{ dirCode:'en-ru', topic:'General', text:'" + WebUtility.HtmlEncode(text) + "', lang:'ru', limit:'3000',useAutoDetect:true, key:'123', ts:'MainSite',tid:'', IsMobile:false}";
                 UTF8Encoding encoding = new UTF8Encoding();
                 Byte[] bytessss = encoding.GetBytes(parsedContent);
 
@@ -736,7 +762,7 @@ namespace SWToR_RUS
                     transl_a = transl_a.Substring(0, posi);
                 }
                 return transl_a;
-            }
+            }*/
             else
                 return text;
 

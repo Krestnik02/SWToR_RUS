@@ -40,7 +40,8 @@ namespace SWToR_RUS
                     ";database=" + "swtor_ru" + //Имя базы данных
                     ";port=" + "3306" + //Порт для подключения
                     ";password=" + "KHUS86!JHksds" + //Пароль для подключения
-                    ";default command timeout=0;";
+                    ";default command timeout=18000;" +//Таймаут
+                    ";pooling=false;";//Не храним соединения в пуле после закрытия приложения
 
         public Configuration Config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None); //Доступ к конфигурации
 
@@ -82,80 +83,26 @@ namespace SWToR_RUS
 
         public string stjk;
 
-        public uint hash_g;        
+        public uint hash_g;
 
         public string my_filename;
 
-        public int is_run = 1;
+        public int is_run = 1;//Запускаем ли приложение, 1 -да,0-нет
 
         public IWebDriver driver;
 
-        private ManagementEventWatcher startWatch = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
+        private readonly ManagementEventWatcher startWatch = new ManagementEventWatcher(new WqlEventQuery("SELECT * FROM Win32_ProcessStartTrace"));
 
         private ProcessStartInfo startInfo = new ProcessStartInfo();
 
         public Form1()
         {
             InitializeComponent();
-            App_Updater();
-            if (is_run == 1)
+            App_Updater();//Обновление приложения, проверка новых версий
+            if (is_run == 1)//Если нет обновлений запускаем приложение
             {
-                if (!File.Exists("SWToR_RUS.exe.Config")) //Проверяем существует ли файл конфига
-                {
-                    CreateConfig(); //Создаём новый файл конфигурации
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                vpo.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString(); //Версия программы
-                //Далее проверяем наличие элементов конфига
-                if (Config.AppSettings.Settings["a_translate"] == null) //Параметр отвечающий за автоматический перевод новых патчей
-                {
-                    Config.AppSettings.Settings.Add("a_translate", "0"); //Добавляем отсутствующий параметр
-                    Config.Save(ConfigurationSaveMode.Minimal); //Сохраняем конфиг
-                    ConfigurationManager.RefreshSection("appSettings"); // Обновляем конфиг для приложения
-                }
-                if (Config.AppSettings.Settings["changes"] == null) //Параметр отвечающий за проверку изменений в текстах после новых патчей
-                {
-                    Config.AppSettings.Settings.Add("changes", "0");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["author"] == null) //Параметр, в котором хранится имя Автора перевода
-                {
-                    Config.AppSettings.Settings.Add("author", "");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["email"] == null) //Параметр, в котором хранится почта Автора перевода
-                {
-                    Config.AppSettings.Settings.Add("email", "");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["password"] == null) //Параметр, в котором хранится пароль Автора перевода
-                {
-                    Config.AppSettings.Settings.Add("password", "");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["backup_row"] == null) //Параметр, в котором хранится бэкап бд
-                {
-                    Config.AppSettings.Settings.Add("backup_row", "0");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["auth_translate"] == null) //Параметр, отвечает заизменение заблокированных переводов
-                {
-                    Config.AppSettings.Settings.Add("auth_translate", "0");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                if (ConfigurationManager.AppSettings["translate_restrict"] == null) //Параметр, отвечает заизменение заблокированных переводов
-                {
-                    Config.AppSettings.Settings.Add("translate_restrict", "0");
-                    Config.Save(ConfigurationSaveMode.Minimal);
-                    ConfigurationManager.RefreshSection("appSettings");
-                }
-                ManagementClass managementClass = new ManagementClass("Win32_Process"); // Смотрим запущен ли лаучер игры
+                Config_Work();//Работаем с конфигурационным файлом (проверка выставление отметок в интерфейсе)
+                ManagementClass managementClass = new ManagementClass("Win32_Process");//Смотрим запущен ли лаучер игры
                 foreach (ManagementObject instance in managementClass.GetInstances())
                 {
                     if (instance["Name"].Equals("launcher.exe"))
@@ -163,159 +110,84 @@ namespace SWToR_RUS
                         launcher_status.Text = "Лаунчер SWToR запущен";
                         launcher_status.ForeColor = Color.Green;
                         launch_status = 1;
-                        break; //Лаунчер найден - прерываем перебор запущенных процессов
+                        break;//Лаунчер найден - прерываем перебор запущенных процессов
                     }
                 }
-                if (launch_status == 0) //Если лаунчер не найден - сообщаем об этом и блокируем часть действий
+                if (launch_status == 0)//Если лаунчер не найден - сообщаем об этом
                 {
                     launcher_status.Text = "Лаунчер SWToR не запущен";
                     launcher_status.ForeColor = Color.Red;
                 }
-
-                GamePath = Config.AppSettings.Settings["gamepath"].Value;
-
                 if (GamePath == "" || launch_status == 0)
                     Install_btn.Enabled = false;
-
-                if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor") || File.Exists(GamePath + "\\Assets\\swtor_main_global_1_tmp.tor"))
-                    TryFix(); //Видимо русификатор некорректно завершил работу, пытаемся вернуть оригинальные файлы на место
-                
-                if(File.Exists(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor")) //Запоминаем если русификатор уже стоит
-                    RusInstalled = 1;
-
-                if (File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup")) //Запоминаем если установлены только шрифты
-                    RusFontsInstalled = 1;
-
-                if (GamePath != "") //Если есть путь к расположению игры
+                if (GamePath != "")//Если есть путь к расположению игры
                 {
-                    if (File.Exists(GamePath + "launcher.exe"))// Проверяем если игра в этой папке
+                    if (File.Exists(GamePath + "launcher.exe"))//Проверяем если игра в этой папке
                     {
                         GamePathTextBox.Text = GamePath;
-                        if (GamePath.ToLower().IndexOf("steamapps") > 0) //Проверяем какая версия игры (Steam или нет)
+                        if (GamePath.ToLower().IndexOf("steamapps") > 0)//Проверяем какая версия игры (Steam или нет)
                             steam_game.Checked = true;
                         else
                             steam_game.Checked = false;
-                        if (Config.AppSettings.Settings["firstrun"].Value == "1") //Если это первый запуск программы
-                            del_btn.Enabled = false;
+                        if (Config.AppSettings.Settings["firstrun"].Value == "1")//Если это первый запуск программы
+                        { del_btn.Enabled = false; }
                         else
                         {
-                            string hash_in_config = Config.AppSettings.Settings["hash"].Value; //Считываем хэши из конфига и оригинального файла
+                            string hash_in_config = Config.AppSettings.Settings["hash"].Value;//Считываем хэши из конфига и оригинального файла
                             if (hash_in_config != "")
                             {
                                 string hash_original_file;
                                 hash_original_file = CalculateMD5(GamePath + "\\Assets\\swtor_main_global_1.tor");
-                                if (hash_in_config == hash_original_file || RusInstalled == 1) //Если хэши совпадают отключаем внопку Установки
+                                if (hash_in_config == hash_original_file)//Если хэши совпадают отключаем внопку Установки
                                 {
+                                    if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor") || File.Exists(GamePath + "\\Assets\\swtor_main_global_1_tmp.tor"))
+                                        TryFix();//Видимо русификатор некорректно завершил работу, пытаемся вернуть оригинальные файлы на место
+                                    if (File.Exists(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor"))//Запоминаем если русификатор уже стоит
+                                        RusInstalled = 1;
                                     Install_btn.Text = "Переустановить";
                                     del_btn.Enabled = true;
-                                    ins_font.Enabled = false;
+                                    Ins_font.Enabled = false;
                                 }
                                 else
-                                    LogBox.AppendText("Hash не совпадает. Проведите переустановку русификатора.\n");
+                                    LogBox.AppendText("Hash не совпадает. Нажмите кнопку 'Переустановить'.\n");
                             }
-                            if (RusFontsInstalled == 1)
-                                ins_font.Text = "Удалить шрифты";
+                            if (File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup"))//Запоминаем если установлены только шрифты
+                            {
+                                RusFontsInstalled = 1;
+                                Ins_font.Text = "Удалить шрифты";
+                                del_btn.Enabled = false;
+                            }
                         }
-                        if (steam_game.Checked == true && launch_status == 1 && RusInstalled == 1) //Если версия Steam, Лаунчер запушен и русификатор установлен
+                        if (steam_game.Checked == true && launch_status == 1 && RusInstalled == 1)//Если версия Steam, Лаунчер запушен и русификатор установлен - подготавливаем файлы для запуска
                             Steam_Rename();
                     }
                 }
-                if (Config.AppSettings.Settings["gender"].Value == "1") //Выставляем выключатели по конфигу
-                    ChooseMen.Checked = true;
-                else
-                {
-                    ChooseWomen.Checked = true;
-                    gender = 0;
-                    Config.AppSettings.Settings["gender"].Value = "0";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["sith"].Value == "0")
-                    ChooseSith.Checked = true;
-                else
-                {
-                    ChooseSit.Checked = true;
-                    Config.AppSettings.Settings["sith"].Value = "1";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["skill"].Value == "2")
-                    dis_skills.Checked = true;
-                else
-                {
-                    dis_skills.Checked = false;
-                    Config.AppSettings.Settings["skill"].Value = "0";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["google"].Value == "1")
-                {
-                    google_opt.Checked = true;
-                    auto_translate.Enabled = true;
-                }
-                else
-                {
-                    auto_translate.Enabled = false;
-                    google_opt.Checked = false;
-                    Config.AppSettings.Settings["google"].Value = "0";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["a_translate"].Value == "1" && Config.AppSettings.Settings["google"].Value == "1" && Config.AppSettings.Settings["skill"].Value == "0")
-                    auto_translate.Checked = true;
-                else
-                {
-                    auto_translate.Checked = false;
-                    Config.AppSettings.Settings["a_translate"].Value = "0";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["a_translate"].Value == "1" && Config.AppSettings.Settings["google"].Value == "1" && Config.AppSettings.Settings["skill"].Value == "0" && Config.AppSettings.Settings["changes"].Value == "1")
-                    changes.Checked = true;
-                else
-                {
-                    changes.Checked = false;
-                    if (Config.AppSettings.Settings["a_translate"].Value == "0")
-                        changes.Enabled = false;
-                    Config.AppSettings.Settings["changes"].Value = "0";
-                    Config.Save(ConfigurationSaveMode.Modified);
-                }
-                if (Config.AppSettings.Settings["auth_translate"].Value == "1")
-                    auth_translate.Checked = true;
-                else
-                    auth_translate.Checked = false;
-                startWatch.EventArrived += startWatch_EventArrived; //Начинаем следить за процессами, чтобы отловить игру или лаунчер
+                startWatch.EventArrived += StartWatch_EventArrived;//Начинаем следить за процессами, чтобы отловить игру или лаунчер
                 startWatch.Start();
             }
         }
-        public void startWatch_EventArrived(object sender, EventArrivedEventArgs e) //Остлеживаем появление процессов
-        {
-            if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "swtor.exe") //Отслеживаем запуск игр
-            {
-                if (steam_game.Checked == false) //Если не steam версия на ходу подменяем файлы
-                {
-                    startWatch.Stop();
-                    Rus_for_orinal_game();
-                }
-            }
 
-            if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "launcher.exe") //Отслеживаем запуск лаунчера
+        public void StartWatch_EventArrived(object sender, EventArrivedEventArgs e) //Остлеживаем появление процессов, чтобы отловить игру или лаунчер
+        {
+            if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "swtor.exe") //Отслеживаем запуск игры
+            {
+                startWatch.Stop();
+                if (steam_game.Checked == false)//Если не steam версия на ходу подменяем файлы
+                    Rus_for_orinal_game();//Подмена файлов для обычной версии с Bitraider'ом
+            }
+            if (e.NewEvent.Properties["ProcessName"].Value.ToString() == "launcher.exe")//Отслеживаем запуск лаунчера
             {
                 Invoke((MethodInvoker)delegate
                 {
                     launcher_status.Text = "Лаунчер SWToR запущен";
                     launcher_status.ForeColor = Color.Green;
-                    if (GamePath != "")
-                    {
-                        if (RusInstalled != 1)
-                        {
-                            Install_btn.Enabled = true;
-                            del_btn.Enabled = false;
-                        }
-                        else
-                            del_btn.Enabled = true;
-                    }
-                    if (steam_game.Checked == true && RusInstalled == 1) //Если версия Steam //Производим подготовку файлов для запуска игры, если русификатор установлен
+                    if (steam_game.Checked == true && RusInstalled == 1)//Если версия Steam подготавливаем файлы для запуска
                         Steam_Rename();
                 });
             }
         }
-        public async void Rus_for_orinal_game() //Для обычной версии программа сама отслеживает запуск игры
+
+        public async void Rus_for_orinal_game()//Для обычной версии программа сама отслеживает запуск игры
         {
             ManagementClass managementClass = new ManagementClass("Win32_Process");
             foreach (ManagementObject instance in managementClass.GetInstances()) //Перебираем процессы в поисках игры
@@ -355,7 +227,7 @@ namespace SWToR_RUS
                     break;
                 }
             }
-            if (gender == 1) //Подменяем аргументы в зависимости от пола персонажа
+            if (gender == 1)//Подменяем аргументы в зависимости от пола персонажа
                 arg = arg.Replace("main,en-us", "maln,ru-wm");
             else if (gender == 0)
                 arg = arg.Replace("main,en-us", "maln,ru-ww");
@@ -364,22 +236,24 @@ namespace SWToR_RUS
             startInfo.WorkingDirectory = work;
             string hash_in_config = Config.AppSettings.Settings["hash"].Value;
             string hash_original = CalculateMD5(GamePath + "\\Assets\\swtor_main_global_1.tor");
-            if (hash_in_config == hash_original) //Повторно запускаем игру с подменёнными параметрами
+            if (hash_in_config == hash_original)//Повторно запускаем игру с подменёнными параметрами
                 Process.Start(startInfo);
-            else //Хэши не совпадают, запускаем переустановку русификатора в автоматическом режиме
+            else//Хэши не совпадают, запускаем переустановку русификатора в автоматическом режиме
             {
                 Thread thread = new Thread((ThreadStart)delegate
                 {
                     LogBox.AppendText("Hash не совпадает. Производится переустановка русификатора и игра запустится автоматически.\n");
-                });
-                thread.IsBackground = true;
+                })
+                {
+                    IsBackground = true
+                };
                 thread.Start();
-                await install();
+                await Install();
                 Process.Start(startInfo);
             }
         }
 
-        public void CreateConfig() //Создаём конфигурационный файл
+        public void CreateConfig()//Создаём конфигурационный файл
         {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
@@ -394,100 +268,71 @@ namespace SWToR_RUS
             stringBuilder.AppendLine("    <add key=\"gender\" value=\"1\" />");
             stringBuilder.AppendLine("    <add key=\"sith\" value=\"0\" />");
             stringBuilder.AppendLine("    <add key=\"skill\" value=\"0\" />");
-            stringBuilder.AppendLine("    <add key=\"google\" value=\"0\" />");
-            stringBuilder.AppendLine("    <add key=\"a_translate\" value=\"0\" />");
-            stringBuilder.AppendLine("    <add key=\"changes\" value=\"0\" />");
+            stringBuilder.AppendLine("    <add key=\"items\" value=\"0\" />");
+            stringBuilder.AppendLine("    <add key=\"non_dialoge\" value=\"0\" />");
+            stringBuilder.AppendLine("    <add key=\"google\" value=\"1\" />");
+            stringBuilder.AppendLine("    <add key=\"a_translate\" value=\"1\" />");
+            stringBuilder.AppendLine("    <add key=\"changes\" value=\"1\" />");
             stringBuilder.AppendLine("    <add key=\"author\" value=\"\" />");
             stringBuilder.AppendLine("    <add key=\"password\" value=\"\" />");
             stringBuilder.AppendLine("    <add key=\"email\" value=\"\" />");
             stringBuilder.AppendLine("    <add key=\"backup_row\" value=\"0\" />");
             stringBuilder.AppendLine("    <add key=\"auth_translate\" value=\"0\" />");
-            stringBuilder.AppendLine("    <add key=\"row_updated_from_server\" value=\"23.08.2020 16:45:04\" />");
+            stringBuilder.AppendLine("    <add key=\"row_updated_from_server\" value=\"06.03.2021 06:38:28\" />");
             stringBuilder.AppendLine("  </appSettings>");
             stringBuilder.AppendLine("</configuration>");
             File.WriteAllText(Assembly.GetEntryAssembly().Location + ".config", stringBuilder.ToString());
         }
+
         private async void Install_btn_Click(object sender, EventArgs e) //Устанавливаем русификатор
         {
-            Install_btn.Enabled = false; //Отключаем на время установки все элементы
-            del_btn.Enabled = false;
-            ChangePathButton.Enabled = false;
-            ChooseSith.Enabled = false;
-            ChooseSit.Enabled = false;
-            ChooseMen.Enabled = false;
-            ChooseWomen.Enabled = false;
-            dis_skills.Enabled = false;
-            btn_info.Enabled = false;
-            google_opt.Enabled = false;
-            auto_translate.Enabled = false;
-            changes.Enabled = false;
-            upload_to_server.Enabled = false;
-            upload_from_server.Enabled = false;
-            recover.Enabled = false;
-            editor_btn.Enabled = false;
-            ins_font.Enabled = false;
-            auth_translate.Enabled = false;
-            await install();
+            Buttons_activity(0);
+            await Install();
         }
-        public async Task install() //Установка русификатора
+
+        public async Task Install()//Установка русификатора
         {
             if (RusFontsInstalled == 1 && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup") && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor"))
             {
                 File.Delete(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
                 File.Move(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup", GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
-                ins_font.Text = "Установить шрифт";
+                Ins_font.Text = "Установить шрифт";
             }
-            if (steam_game.Checked == true) //Возвращаем файлы в исходное положение
+            if (steam_game.Checked == true)//Возвращаем файлы в исходное положение
                 TryFix();
-            int num = EndOff(GamePath + "\\Assets\\swtor_en-us_global_1.tor"); //Проверяем оригинальные ли файлы игры
+            int num = EndOff(GamePath + "\\Assets\\swtor_en-us_global_1.tor");//Проверяем оригинальные ли файлы игры
             int num2 = EndOff(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
             if (num == 0 || num2 == 0)
-                LogBox.AppendText("Оригинальные файлы повреждены! Восспользуйтесь функцией проверки в лаунчере игры.\n");
+                LogBox.AppendText("Оригинальные файлы повреждены! Восспользуйтесь функцией проверки файлов игры.\n");
             else if (num == 2 || num2 == 2)
                 LogBox.AppendText("Необходимо обновить игру перед установкой русификатора!\n");
             else
             {
                 LogBox.AppendText(Properties.Resources.patchhosts);
-                PatchHosts(); //Патчим host файл, чтобы заблокировать отправку отчётов
+                PatchHosts();//Патчим host файл, чтобы заблокировать отправку отчётов
                 LogBox.AppendText(Properties.Resources.copyfiles);
-                await CopyfilesAsync(); //Копируем оригинальные файлы
+                await CopyfilesAsync();//Копируем оригинальные файлы
                 LogBox.AppendText(Properties.Resources.Done + "\n");
                 LogBox.AppendText(Properties.Resources.Patch);
                 Patch patch = new Patch();
                 await Task.Run(delegate
                 {
-                    patch.ConnectDB(); //Патчим файлы
+                    patch.ConnectDB();//Патчим файлы
                 });
-                LogBox.AppendText(Properties.Resources.Done + "\n");                
+                LogBox.AppendText(Properties.Resources.Done + "\n");
                 Config.AppSettings.Settings["firstrun"].Value = "0";
                 Config.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
                 if (steam_game.Checked == true)
                     Steam_Rename();
                 Install_btn.Text = "Переустановить";//Включаем элементы и переименовываем кнопку Установки
-                del_btn.Enabled = true;
-                ChangePathButton.Enabled = true;
-                ChooseSith.Enabled = true;
-                ChooseSit.Enabled = true;
-                ChooseMen.Enabled = true;
-                ChooseWomen.Enabled = true;
-                btn_info.Enabled = true;
-                upload_to_server.Enabled = true;
-                upload_from_server.Enabled = true;
-                recover.Enabled = true;
-                editor_btn.Enabled = true;
-                dis_skills.Enabled = true;
-                google_opt.Enabled = true;
-                Install_btn.Enabled = true;
-                if (google_opt.Checked == true)
-                    auto_translate.Enabled = true;
-                if (auto_translate.Checked == true)
-                    changes.Enabled = true;
-                auth_translate.Enabled = true;
+                RusInstalled = 1;
+                Buttons_activity(1);
                 LogBox.AppendText("Установка закончена.\n");
             }
         }
-        private void PatchHosts() //Патчер host файла
+
+        private void PatchHosts()//Патчер host файла
         {
             string path = "C:\\Windows\\System32\\drivers\\etc\\hosts";
             if (File.Exists(path))
@@ -518,6 +363,7 @@ namespace SWToR_RUS
             else
                 LogBox.AppendText(Properties.Resources.hostsnotfound + "\n");
         }
+
         public async Task CopyfilesAsync() //Копирование оригинальных файлов
         {
             ProgressBar1.Value = 0;
@@ -535,7 +381,8 @@ namespace SWToR_RUS
             Config.Save(ConfigurationSaveMode.Modified);
             ConfigurationManager.RefreshSection("appSettings");
         }
-        public async Task CopyFileAsync(string sourcePath, string destinationPath) //Ассинхронное копирование файлов
+
+        public async Task CopyFileAsync(string sourcePath, string destinationPath)//Ассинхронное копирование файлов
         {
             using (Stream source = File.OpenRead(sourcePath))
             {
@@ -545,7 +392,8 @@ namespace SWToR_RUS
                 }
             }
         }
-        public static string CalculateMD5(string filename)
+
+        public static string CalculateMD5(string filename)//Вычисляем Hash
         {
             using (MD5 mD = MD5.Create())
             {
@@ -555,17 +403,21 @@ namespace SWToR_RUS
                 }
             }
         }
-        private void ChangePathButton_Click(object sender, EventArgs e) //Обработка смена пути к игре
+
+        private void ChangePathButton_Click(object sender, EventArgs e)//Обработка изменения пути к игре
         {
             ChoosePath();
         }
-        private void ChoosePath()
+
+        private void ChoosePath()//Обработка изменения пути к игре
         {
-            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-            folderBrowserDialog.Description = "Укажите путь к SWToR";
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+            {
+                Description = "Укажите путь к SWToR"
+            };
             if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
             {
-                if (folderBrowserDialog.SelectedPath.ToLower().IndexOf("steamapps") > 0 || folderBrowserDialog.SelectedPath.ToLower().IndexOf("SteamApps") > 0) //Проверяем путь к обычной версии или к Steam
+                if (folderBrowserDialog.SelectedPath.ToLower().IndexOf("steamapps") > 0)//Проверяем путь к обычной версии или к Steam
                     steam_game.Checked = true;
                 else if (steam_game.Checked == true)
                     steam_game.Checked = false;
@@ -573,58 +425,54 @@ namespace SWToR_RUS
                 if (!GamePath.EndsWith("\\"))
                     GamePath += "\\";
                 if (launch_status == 1)
-                {
                     TryFix();
-                    Steam_Rename();
-                }
                 GamePathTextBox.Text = folderBrowserDialog.SelectedPath;
             }
         }
-        private void ChooseSith_CheckedChanged(object sender, EventArgs e) //Переключатель варианта переводс Ситх\Сит
+
+        private void ChooseSith_CheckedChanged(object sender, EventArgs e)//Переключатель варианта перевода Ситх\Сит
         {
             Config.AppSettings.Settings["sith"].Value = "0";
             Config.Save(ConfigurationSaveMode.Modified);
         }
-        private void ChooseSit_CheckedChanged(object sender, EventArgs e) //Переключатель варианта переводс Ситх\Сит
+
+        private void ChooseSit_CheckedChanged(object sender, EventArgs e)//Переключатель варианта перевода Ситх\Сит
         {
             Config.AppSettings.Settings["sith"].Value = "1";
             Config.Save(ConfigurationSaveMode.Modified);
         }
-        private void ChooseMen_CheckedChanged(object sender, EventArgs e) //Переключатель мужской\женский персонаж
+
+        private void ChooseMen_CheckedChanged(object sender, EventArgs e)//Переключатель мужской\женский персонаж
         {
             Config.AppSettings.Settings["gender"].Value = "1";
             Config.Save(ConfigurationSaveMode.Modified);
             gender = 1;
-            if (steam_game.Checked == true)
-            {
-                if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor"))
-                {
-                    if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor"))
-                        File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-wm_global_1.tor");
-                    else if (File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor"))
-                        File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-ww_global_1.tor");
-                    File.Move(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1.tor");
-                }
-            }
+            if (steam_game.Checked == true && RusInstalled==1)
+                Gender_steam_change("ru-wm");
         }
-        private void ChooseWomen_CheckedChanged(object sender, EventArgs e) //Переключатель мужской\женский персонаж
+
+        private void ChooseWomen_CheckedChanged(object sender, EventArgs e)//Переключатель мужской\женский персонаж
         {
             Config.AppSettings.Settings["gender"].Value = "0";
             Config.Save(ConfigurationSaveMode.Modified);
             gender = 0;
-            if (steam_game.Checked == true)
+            if (steam_game.Checked == true && RusInstalled == 1)
+                Gender_steam_change("ru-ww");
+        }
+
+        public void Gender_steam_change(string first)//Переключатель мужской\женский персонаж для Steam версии игры
+        {
+            if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor"))
             {
-                if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor"))
-                {
-                    if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor"))
-                        File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-wm_global_1.tor");
-                    else if (File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor"))
-                        File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-ww_global_1.tor");
-                    File.Move(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1.tor");
-                }
+                if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor"))
+                    File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-wm_global_1.tor");
+                else if (File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor"))
+                    File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-ww_global_1.tor");
+                File.Move(GamePath + "\\Assets\\swtor_"+ first + "_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1.tor");
             }
         }
-        private void GamePathTextBox_TextChanged(object sender, EventArgs e) //Проверяем изменение пути к игре
+
+        private void GamePathTextBox_TextChanged(object sender, EventArgs e)//Проверяем изменение пути к игре
         {            
             string NewPath = GamePathTextBox.Text;
             if (!NewPath.EndsWith("\\"))
@@ -636,29 +484,15 @@ namespace SWToR_RUS
                 return;
             }
             Install_btn.Enabled = true;
+            Ins_font.Enabled = true;
             Config.AppSettings.Settings["gamepath"].Value = NewPath;
             Config.Save(ConfigurationSaveMode.Modified);
             ConfigurationManager.RefreshSection("appSettings");
         }
         
-        private void del_btn_Click(object sender, EventArgs e) //Удаляем русификатор
+        private void Del_btn_Click(object sender, EventArgs e)//Удаляем русификатор
         {
-            Install_btn.Enabled = false; //Отключаем временно все элементы
-            del_btn.Enabled = false;
-            ChangePathButton.Enabled = false;
-            ChooseSith.Enabled = false;
-            ChooseSit.Enabled = false;
-            ChooseMen.Enabled = false;
-            ChooseWomen.Enabled = false;
-            dis_skills.Enabled = false;
-            btn_info.Enabled = false;
-            google_opt.Enabled = false;
-            auto_translate.Enabled = false;
-            changes.Enabled = false;
-            upload_to_server.Enabled = false;
-            upload_from_server.Enabled = false;
-            recover.Enabled = false;
-            editor_btn.Enabled = false;            
+            Buttons_activity(0);
             LogBox.AppendText(Properties.Resources.deletefiles);
             try
             {
@@ -700,60 +534,46 @@ namespace SWToR_RUS
                 {
                 }                
             }
-            Config.AppSettings.Settings["firstrun"].Value = "1";
-            Config.Save(ConfigurationSaveMode.Modified);
             LogBox.AppendText(Properties.Resources.Done + "\n");
             LogBox.AppendText("Удаление закончено.\n");
-            Install_btn.Enabled = true;
-            ins_font.Enabled = true;
-            del_btn.Enabled = false;
-            Application.Exit();
+            Install_btn.Text = "Установить";
+            RusInstalled = 0;
+            Buttons_activity(1);
         }
-        private void db_convertor_Click(object sender, EventArgs e)
+        private void Db_convertor_Click(object sender, EventArgs e)
         {
-            string line;
-            string line2 = "";
-            using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
+            string transl_a;
+            var baseAddress = "https://www.translate.ru/api/soap/getTranslation";
+            var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
+            http.Accept = "application/json";
+            http.ContentType = "application/json";
+            http.Method = "POST";
+
+            string parsedContent = "{ dirCode:'en-ru', topic:'General', text:'" + WebUtility.HtmlEncode("HEllo") + "', eventName:'TranslatorClickTranslateActionUser',useAutoDetect:true,prmtXrvt:'KgY2G3lOc-5uguhvmWZNHGBO5zW9MU8xdEXVlx3I11E0X_tDvKwCj5pgzqYuOL8YmqLu_k6SBeQ1QKSV6OPzJ8ies-KXps1ZBFGk0zygkMzf5i_XZ9DKaAllc3bR7b1i'}";
+            UTF8Encoding encoding = new UTF8Encoding();
+            Byte[] bytessss = encoding.GetBytes(parsedContent);
+
+            Stream newStream = http.GetRequestStream();
+            newStream.Write(bytessss, 0, bytessss.Length);
+            newStream.Close();
+
+            var response = http.GetResponse();
+
+            var stream = response.GetResponseStream();
+            var sr = new StreamReader(stream);
+            var result = sr.ReadToEnd();
+            Console.WriteLine(result);
+            var details = JObject.Parse(result);
+            transl_a = details["d"]["result"].ToString();
+            Console.WriteLine(transl_a);
+            if (transl_a.Contains("<div class=\"sourceTxt\">"))
             {
-                sqlite_conn.Open();
-                using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sqlite_conn))
-                {
-                    StreamReader file = new StreamReader("db\\deepl_trans.txt");
-                    using (SQLiteTransaction transaction = sqlite_conn.BeginTransaction())
-                    {
-                        while ((line = file.ReadLine()) != null)
-                        {
-                            if (line2 == "")
-                            {
-                                if (line.IndexOf("');") != -1)
-                                {
-                                    sqlite_cmd.CommandText = line;
-                                    sqlite_cmd.ExecuteNonQuery();
-                                    line2 = "";
-                                }
-                                else
-                                {
-                                    line2 = line;
-                                }
-                            }
-                            else
-                            {
-                                line2 += line;
-                                if (line2.IndexOf("');") != -1)
-                                {
-                                    sqlite_cmd.CommandText = line2;
-                                    sqlite_cmd.ExecuteNonQuery();
-                                    line2 = "";
-                                }
-                            }
-                            
-                            
-                        }
-                        transaction.Commit();
-                    }
-                }
-                sqlite_conn.Close();
+                int posi = transl_a.IndexOf("<div class=\"sourceTxt\">");
+                transl_a = transl_a.Substring(posi + 23);
+                posi = transl_a.IndexOf("</div>");
+                transl_a = transl_a.Substring(0, posi);
             }
+            Console.WriteLine(transl_a);
 
 
 
@@ -1201,26 +1021,31 @@ namespace SWToR_RUS
                     */
 
         }
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+
+        private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://vk.com/togruth");
         }
-        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+
+        private void LinkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://vk.com/swtor_jk");
         }
-        private void linkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+
+        private void LinkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://vk.com/club195326840");
         }
-        private void btn_info_Click(object sender, EventArgs e) //Окно Информация
+
+        private void Btn_info_Click(object sender, EventArgs e)//Окно Информация
         {
             if (ActiveForm.Height == 400)
                 ActiveForm.Height = 600;
             else
                 ActiveForm.Height = 400;
         }
-        private void google_opt_CheckedChanged(object sender, EventArgs e) //Переключатель Машинного Переводчика
+
+        private void Google_opt_CheckedChanged(object sender, EventArgs e)//Переключатель Машинного Переводчика
         {
             string js;
             if (google_opt.Checked)
@@ -1241,16 +1066,18 @@ namespace SWToR_RUS
             Config.AppSettings.Settings["google"].Value = js;
             Config.Save(ConfigurationSaveMode.Modified);
         }
-        private void editor_btn_Click_1(object sender, EventArgs e) //Открываем окно редакора
+
+        private void Editor_btn_Click_1(object sender, EventArgs e)//Открываем окно редакора
         {
             this.Hide();
             Form2 form2 = new Form2();
             form2.Show();            
         }
-        private void dis_skills_CheckedChanged(object sender, EventArgs e) //Переключатель отключения перевода скилов
+
+        private void Dis_skills_CheckedChanged(object sender, EventArgs e)//Переключатель отключения перевода скилов
         {
             string js;
-            if (dis_skills.Checked)
+            if (Dis_skills.Checked)
             {
                 js = "2";
                 auto_translate.Checked = false;
@@ -1267,32 +1094,18 @@ namespace SWToR_RUS
             Config.AppSettings.Settings["skill"].Value = js;
             Config.Save(ConfigurationSaveMode.Modified);
         }
-        private async void upload_to_server_Click(object sender, EventArgs e) //Выгрузка переводов на сервер
+
+        private async void Upload_to_server_Click(object sender, EventArgs e)//Выгрузка переводов на сервер
         {
-            upload_to_server.Enabled = false;
-            upload_from_server.Enabled = false;
-            recover.Enabled = false;            
-            editor_btn.Enabled = false;
-            ChangePathButton.Enabled = false;
-            Install_btn.Enabled = false;
-            del_btn.Enabled = false;
-            btn_info.Enabled = false;
+            Buttons_activity(0);
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Начинаем выгрузку переводов на сервер...\n")));            
             ProgressBar1.Value = 0;            
-            await Task.Run(() => upload_to_server_method());
-            upload_to_server.Enabled = true;
-            upload_from_server.Enabled = true;
-            recover.Enabled = true;
-            editor_btn.Enabled = true;
-            ChangePathButton.Enabled = true;
-            btn_info.Enabled = true;
-            if (GamePath != "")
-                Install_btn.Enabled = true;
-            if (RusInstalled == 1)
-                del_btn.Enabled = true;
+            await Task.Run(() => Upload_to_server_method());
+            Buttons_activity(1);
             LogBox.AppendText("Выгрузка закончена!\n");
         }
-        public void upload_to_server_method() //Выгрузка переводов на сервер
+
+        public void Upload_to_server_method()//Выгрузка переводов на сервер
         {
             string key_import = "";
             string text_ru_m_import = "";
@@ -1306,7 +1119,7 @@ namespace SWToR_RUS
             DateTime time = DateTime.UtcNow;
             string format = "dd.MM.yyyy HH:mm:ss";
             string mysql_time_export = time.ToString(format);
-            string[] allfiles = Directory.GetFiles("user_translation\\", "*", SearchOption.AllDirectories);
+            string[] allfiles = Directory.GetFiles("user_translation\\", "*.xml", SearchOption.TopDirectoryOnly);
             using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
             {
                 conn.Open();
@@ -1366,48 +1179,39 @@ namespace SWToR_RUS
                             }
                             MySqlCommand update = new MySqlCommand(sql_update, conn);
                             int numRowsUpdated = update.ExecuteNonQuery();
+                            update.Dispose();
                             if (numRowsUpdated == 0)
                             {
                                 MySqlCommand insert = new MySqlCommand(sql_insert, conn);
                                 insert.ExecuteNonQuery();
+                                insert.Dispose();
                             }
                             num_edited_rows++;
                             ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
                         }
                         jks++;
                     }
+                    if (!Directory.Exists("user_translation\\done"))
+                        Directory.CreateDirectory("user_translation\\done");
+                    string[] tokens0 = filename.Split(new char[] { '\\' });
+                    File.Move(filename, "user_translation\\done\\"+ tokens0.Last());
                 }
                 conn.Close();
                 ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Выгрузка закончена. Выгружено " + num_edited_rows + " строк.\n")));
             }
         }
-        private async void upload_from_server_Click(object sender, EventArgs e) //Загрузка переводов с сервера
+
+        private async void Upload_from_server_Click(object sender, EventArgs e) //Загрузка переводов с сервера
         {
-            upload_to_server.Enabled = false;
-            upload_from_server.Enabled = false;
-            recover.Enabled = false;
-            editor_btn.Enabled = false;
-            ChangePathButton.Enabled = false;
-            Install_btn.Enabled = false;
-            del_btn.Enabled = false;
-            btn_info.Enabled = false;
+            Buttons_activity(0);
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Начинаем загрузку переводов с сервера...\n")));
             ProgressBar1.Value = 0;
-            await Task.Run(() => upload_from_server_method());
-            upload_to_server.Enabled = true;
-            upload_from_server.Enabled = true;
-            recover.Enabled = true;
-            editor_btn.Enabled = true;
-            ChangePathButton.Enabled = true;
-            btn_info.Enabled = true;
-            if (GamePath != "")
-                Install_btn.Enabled = true;
-            if (RusInstalled == 1)
-                del_btn.Enabled = true;
+            await Task.Run(() => Upload_from_server_method());
+            Buttons_activity(1);
             LogBox.AppendText("Загрузка переводов закончена!\n");  
         }
-        public void upload_from_server_method() //Загрузка переводов с сервера
+        public void Upload_from_server_method()//Загрузка переводов с сервера
         {
             if (!File.Exists("db\\translate_backup.db3"))
                 File.Copy("db\\translate.db3", "db\\translate_backup.db3");
@@ -1442,7 +1246,7 @@ namespace SWToR_RUS
                     using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
                     {
                         conn.Open();
-                        if (Config.AppSettings.Settings["auth_translate"].Value == "1") // Если стоит отметка запрета загрузки заблокированных переводов, получаем список заблокированных авторов
+                        if (Config.AppSettings.Settings["auth_translate"].Value == "1")//Если стоит отметка запрета загрузки заблокированных переводов, получаем список заблокированных авторов
                         {
                             sql = "SELECT name FROM users WHERE status=1";
                             MySqlCommand command = new MySqlCommand(sql, conn);
@@ -1454,14 +1258,16 @@ namespace SWToR_RUS
                             reader1.Close();
                         }
                         sql = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
-                        MySqlCommand command2 = new MySqlCommand(sql, conn);
-                        command2.CommandText = sql;
+                        MySqlCommand command2 = new MySqlCommand(sql, conn)
+                        {
+                            CommandText = sql
+                        };
                         MySqlDataReader reader = command2.ExecuteReader();
                         using (StreamWriter tmp_save = new StreamWriter("tmp\\server_update.xml", true, encoding: Encoding.UTF8))
                         {
                             tmp_save.WriteLine("<rezult>");
                         }
-                        while (reader.Read()) //перебираем все новые строки
+                        while (reader.Read())//перебираем все новые строки
                         {
                             string xml_text1 = "<key>" + WebUtility.HtmlEncode(reader["key_unic"].ToString()) + "</key><text_en>" + WebUtility.HtmlEncode(reader["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(reader["translator_m"].ToString()) + "\">" + WebUtility.HtmlEncode(reader["text_ru_m"].ToString()) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(reader["translator_w"].ToString()) + "\">" + WebUtility.HtmlEncode(reader["text_ru_w"].ToString()) + "</text_ru_w>";
                             using (StreamWriter tmp_save = new StreamWriter("tmp\\server_update.xml", true, encoding: Encoding.UTF8))
@@ -1508,7 +1314,8 @@ namespace SWToR_RUS
                         }
                         if (jks % 4 == 0)
                         {
-                            if (text_ru_m_import != "" && text_ru_w_import != "") //Если в строке и М и Ж варианты перевода
+                            sqllite_update = "";
+                            if (text_ru_m_import != "" && text_ru_w_import != "")//Если в строке и М и Ж варианты перевода
                             {
                                 if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
                                 {
@@ -1521,35 +1328,34 @@ namespace SWToR_RUS
                                         sqllite_update = "";
                                         if (Config.AppSettings.Settings["auth_translate"].Value == "1") //Если стоит отметка запрета загрузки заблокированных переводов,
                                         {
-                                            if (blocked_users.Contains(reader1["translator_m"].ToString()) && reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && blocked_users.Contains(reader1["translator_w"].ToString()) && reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и Ж и есть новый переводчик
+                                            if (blocked_users.Contains(reader1["translator_m"].ToString()) && reader1["translator_m"].ToString() != translator_m_import && blocked_users.Contains(reader1["translator_w"].ToString()) && reader1["translator_w"].ToString() != translator_w_import)
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
                                             else if (blocked_users.Contains(reader1["translator_m"].ToString()) && reader1["translator_m"].ToString() != translator_m_import) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
                                             {
+                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"\"></text_ru_w>";
                                                 sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
-                                                if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString())
-                                                    xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"\"></text_ru_w>";
+                                                    
                                             }
                                             else if (blocked_users.Contains(reader1["translator_w"].ToString()) && reader1["translator_w"].ToString() != translator_w_import) //Если пользователь переводчик старого варианта строки Ж и есть новый переводчик
                                             {
-                                                sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
-                                                if (reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString())
-                                                    xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"\"></text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
+                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"\"></text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
+                                                sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";  
                                             }
                                             else if (!blocked_users.Contains(translator_m_import) && !blocked_users.Contains(translator_w_import))
                                                 sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                                         }
-                                        else if (Config.AppSettings.Settings["translate_restrict"].Value == "1")// Если запрещёно редактирование перевода пользователя
+                                        else if (Config.AppSettings.Settings["translate_restrict"].Value == "1")//Если запрещёно редактирование перевода пользователя
                                         {
-                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и Ж и есть новый переводчик
+                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString())
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
                                             else if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
                                             {
-                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
+                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"\"></text_ru_w>";
                                                 sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                                             }
-                                            else if (reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки Ж и есть новый переводчик
+                                            else if (reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString())//Если пользователь переводчик старого варианта строки Ж и есть новый переводчик
                                             {
-                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
+                                                xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"\"></text_ru_m><text_ru_w  transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
                                                 sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                                             }
                                             else //Если переводчик строки М и Ж тот же самый
@@ -1561,27 +1367,27 @@ namespace SWToR_RUS
                                     reader1.Close();
                                 }
                                 else
-                                sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
+                                    sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                             }
-                            else if (text_ru_m_import != "") //Если в строке только М вариант перевода
+                            else if (text_ru_m_import != "")//Если в строке только М вариант перевода
                             {
                                 if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
                                 {
                                     string sql_select = "SELECT text_en, text_ru_m, translator_m FROM Translated WHERE key_unic='" + key_import + "'";
                                     sqlite_cmd.CommandText = sql_select;
                                     SQLiteDataReader reader1 = sqlite_cmd.ExecuteReader();
-                                    while (reader1.Read()) //получили старого автора этой строки перевода
+                                    while (reader1.Read())//получили старого автора этой строки перевода
                                     {
-                                        if (Config.AppSettings.Settings["auth_translate"].Value == "1") //Если стоит отметка запрета загрузки заблокированных переводов
+                                        if (Config.AppSettings.Settings["auth_translate"].Value == "1")//Если стоит отметка запрета загрузки заблокированных переводов
                                         {
-                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
+                                            if (reader1["translator_m"].ToString() != translator_m_import && blocked_users.Contains(reader1["translator_m"].ToString()))
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
-                                            else if (!blocked_users.Contains(reader1["translator_m"].ToString()))
+                                            else if (!blocked_users.Contains(reader1["translator_m"].ToString()) || reader1["translator_m"].ToString()== translator_m_import)
                                                 sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                                         }
                                         else if (Config.AppSettings.Settings["translate_restrict"].Value == "1")// Если запрещёно редактирование перевода пользователя
                                         {
-                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
+                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString())
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
                                             else
                                                 sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
@@ -1591,7 +1397,8 @@ namespace SWToR_RUS
                                     }
                                     reader1.Close();
                                 }
-                                sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
+                                else
+                                    sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                             }
                             else if (text_ru_w_import != "")//Если в строке только Ж вариант перевода
                             {
@@ -1600,18 +1407,18 @@ namespace SWToR_RUS
                                     string sql_select = "SELECT text_en, text_ru_m, translator_m FROM Translated WHERE key_unic='" + key_import + "'";
                                     sqlite_cmd.CommandText = sql_select;
                                     SQLiteDataReader reader1 = sqlite_cmd.ExecuteReader();
-                                    while (reader1.Read()) //получили старого автора этой строки перевода
+                                    while (reader1.Read())//получили старого автора этой строки перевода
                                     {
                                         if (Config.AppSettings.Settings["auth_translate"].Value == "1") //Если стоит отметка запрета загрузки заблокированных переводов
                                         {
-                                            if (reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
+                                            if (reader1["translator_w"].ToString() != translator_w_import && blocked_users.Contains(translator_w_import))
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
-                                            else if (!blocked_users.Contains(reader1["translator_m"].ToString()))
+                                            else if (!blocked_users.Contains(reader1["translator_w"].ToString()) || reader1["translator_w"].ToString() == translator_w_import)
                                                 sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                                         }
                                         else if (Config.AppSettings.Settings["translate_restrict"].Value == "1")// Если запрещёно редактирование перевода пользователя
                                         {
-                                            if (reader1["translator_m"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_m_import != Config.AppSettings.Settings["author"].Value.ToString()) //Если пользователь переводчик старого варианта строки М и есть новый переводчик
+                                            if (reader1["translator_w"].ToString() == Config.AppSettings.Settings["author"].Value.ToString() && translator_w_import != Config.AppSettings.Settings["author"].Value.ToString())
                                                 xml_text = "<key>" + WebUtility.HtmlEncode(key_import) + "</key><text_en>" + WebUtility.HtmlEncode(reader1["text_en"].ToString()) + "</text_en><text_ru_m transl=\"" + WebUtility.HtmlEncode(translator_m_import) + "\">" + WebUtility.HtmlEncode(text_ru_m_import) + "</text_ru_m><text_ru_w transl=\"" + WebUtility.HtmlEncode(translator_w_import) + "\">" + WebUtility.HtmlEncode(text_ru_w_import) + "</text_ru_w>";
                                             else
                                                 sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
@@ -1632,6 +1439,8 @@ namespace SWToR_RUS
                             }
                             if (xml_text != "")
                             {
+                                if (!Directory.Exists("blocked_translations"))//Создаём папку для блокированных переводов
+                                    Directory.CreateDirectory("blocked_translations");
                                 count_for_xml++;
                                 if (count_for_xml == 1)
                                 {
@@ -1694,7 +1503,7 @@ namespace SWToR_RUS
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("При загрузке обнаружены строки, которые заменят ваш перевод! Они сохранены в папке blocked_translations.\n")));
 
         }
-        private void recover_Click(object sender, EventArgs e) //Восстановление резервной копии БД
+        private void Recover_Click(object sender, EventArgs e)//Восстановление резервной копии БД
         {
             if (File.Exists("db\\translate_backup.db3"))
             {
@@ -1709,7 +1518,7 @@ namespace SWToR_RUS
                 try
                 {
                     conn.Open();
-                    string sql = "SELECT COUNT(*) FROM translated";
+                    string sql = "SELECT COUNT(*) FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
                     MySqlCommand command = new MySqlCommand(sql, conn);
                     int counrow = Int32.Parse(command.ExecuteScalar().ToString());
                     if (counrow <= Int32.Parse(Config.AppSettings.Settings["row_updated_from_server"].Value))
@@ -1726,28 +1535,30 @@ namespace SWToR_RUS
                         upload_from_server.Enabled = true;
                     }
                     command.Dispose();
-                    conn.Dispose();
+                    conn.Close();
                 }
                 catch (Exception ex)
                 {
                     updatedownload.Text = "Не удалось соединиться с удалённой базой!" + ex.Message;
                 }
-
                 LogBox.AppendText("Резервная копия БД восстановлена!\n");
             }
         }
-        private void pictureBox2_Click(object sender, EventArgs e)
+
+        private void PictureBox2_Click(object sender, EventArgs e)
         {
             Process.Start("http://www.swtor.com/r/zlfJtV");
         }
-        private void label1_Click(object sender, EventArgs e) //Скачиваем и открываем Инстукцию
+
+        private void Label1_Click(object sender, EventArgs e)//Скачиваем и открываем Инстукцию
         {
             if (File.Exists("Инструкция.pdf"))
                 File.Delete("Инструкция.pdf");
             Downloading_Files("https://drive.google.com/uc?export=download&id=1fXQML3tazPL50Q6yy0x2qWauupouYkol", "Инструкция.pdf");
             Process.Start("Инструкция.pdf");
         }
-        private async void Update_app_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e) //Запуск обновления приложения
+
+        private async void Update_app_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)//Запуск обновления приложения
         {
             upload_to_server.Enabled = false;
             upload_from_server.Enabled = false;
@@ -1757,23 +1568,25 @@ namespace SWToR_RUS
             Install_btn.Enabled = false;
             del_btn.Enabled = false;
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Обновляем программу...\n")));
-            await Task.Run(() => update_app_method());
+            await Task.Run(() => Update_app_method());
         }
-        private void update_app_method() //Запуск обновления приложения
+
+        private void Update_app_method()//Запуск обновления приложения
         {
             if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "updater.exe"))
                 Downloading_Files("https://drive.google.com/uc?export=download&id=1QiIVmdCQ-12d1cbMuaCSv7YiarFK0TYs", "updater.exe"); //Загружаем обновление            
             Process proc = new Process();
             proc.StartInfo.WorkingDirectory = Application.StartupPath;
             proc.StartInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "updater.exe";
-            proc.StartInfo.Arguments = "/u \"" + AppDomain.CurrentDomain.BaseDirectory + "SWToR_RUS.exe" + "\""; // Аргументы командной строки
-            proc.Start(); // Запускаем!
+            proc.StartInfo.Arguments = "/u \"" + AppDomain.CurrentDomain.BaseDirectory + "SWToR_RUS.exe" + "\"";//Аргументы командной строки
+            proc.Start();//Запускаем!
             Invoke((MethodInvoker)delegate
             {
                 Application.Exit();
             });
         }
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e) //Обработчик закрытия приложения
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)//Обработчик закрытия приложения
         {
             if (is_run == 0)
                 Application.Exit();            
@@ -1781,15 +1594,18 @@ namespace SWToR_RUS
                 TryFix();
             Application.Exit();
         }
-        private void auto_translate_CheckedChanged(object sender, EventArgs e) //Переключатель авто-переводчика
+
+        private void Auto_translate_CheckedChanged(object sender, EventArgs e) //Переключатель авто-переводчика
         {
-            string js;
             if (google_opt.Checked == true)
             {
+                string js;
                 if (auto_translate.Checked)
                 {
                     js = "1";
-                    dis_skills.Checked = false;
+                    Dis_skills.Checked = false;
+                    Dis_items.Checked = false;
+                    Dis_non_dialoge.Checked = false;
                     changes.Enabled = true;
                 }
                 else
@@ -1809,11 +1625,12 @@ namespace SWToR_RUS
                 changes.Checked = false;
             }
         }
-        private void changes_CheckedChanged(object sender, EventArgs e) //Переключатель проверки изменений
+
+        private void Changes_CheckedChanged(object sender, EventArgs e)//Переключатель проверки изменений
         {
-            string js;
             if (google_opt.Checked == true && auto_translate.Checked == true)
             {
+                string js;
                 if (changes.Checked)
                     js = "1";
                 else
@@ -1822,33 +1639,34 @@ namespace SWToR_RUS
                 Config.Save(ConfigurationSaveMode.Modified);
             }
         }
-        private void App_Updater() //Обновление программы
+
+        private void App_Updater()//Обновление программы, проверка новых версий
         {
-            string[] keys = Environment.GetCommandLineArgs(); //Получаем аргументы командной строки
-            if (keys.Length > 1)
+            string[] keys = Environment.GetCommandLineArgs();//Получаем аргументы командной строки
+            if (keys.Length > 1)//Если приложение запущено с ключом
             {
-                int loop = 10; //Количество попыток
-                if (keys[1] == "/u") //Если ключ "u" запускаем updater.exe
+                int loop = 10;//Количество попыток
+                if (keys[1] == "/u")//Если ключ "u" запускаем updater.exe
                 {
                     is_run = 0;
-                    while (--loop > 0 && File.Exists(CurDir + "SWToR_RUS.exe")) //Удаляем оригинальный файл
+                    while (--loop > 0 && File.Exists(CurDir + "SWToR_RUS.exe"))//Удаляем оригинальный файл
                         try
                         {
                             File.Delete(CurDir + "SWToR_RUS.exe");
                         }
                         catch
                         {
-                            Thread.Sleep(200); //Небольшая задержка, если файл занят
+                            Thread.Sleep(200);//Небольшая задержка, если файл занят
                         }
-                    File.Copy(CurDir + "updater.exe", CurDir + "SWToR_RUS.exe"); // Копируем скачанный файл в оригинальное имя файла
-                    Process proc = new Process(); // Запускаем Программу с ключом "d"
+                    File.Copy(CurDir + "updater.exe", CurDir + "SWToR_RUS.exe");//Копируем скачанный файл в оригинальное имя файла
+                    Process proc = new Process();//Запускаем Программу с ключом "d"
                     proc.StartInfo.WorkingDirectory = Application.StartupPath;
                     proc.StartInfo.FileName = CurDir + "SWToR_RUS.exe";
-                    proc.StartInfo.Arguments = "/d \"" + CurDir + "SWToR_RUS.exe" + "\""; //Аргументы командной строки
+                    proc.StartInfo.Arguments = "/d \"" + CurDir + "SWToR_RUS.exe" + "\"";//Аргументы командной строки
                     proc.Start();
-                    Close(); //Закрываем текущее приложение
+                    Close();//Закрываем текущее приложение
                 }
-                else if (keys[1] == "/d") //Если ключ "d" удаляем updater.exe
+                else if (keys[1] == "/d")//Если ключ "d" удаляем updater.exe
                 {
                     while (--loop > 0 && File.Exists(CurDir + "updater.exe"))
                         try
@@ -1857,10 +1675,9 @@ namespace SWToR_RUS
                         }
                         catch
                         {
-                            Thread.Sleep(200); //Небольшая задержка, если файл занят
+                            Thread.Sleep(200);//Небольшая задержка, если файл занят
                         }
-
-                    LogBox.AppendText("Программа обновлена...\n");
+                    LogBox.AppendText("Приложение обновлено.\n");
                     is_run = 1;
                 }
                 else
@@ -1872,40 +1689,43 @@ namespace SWToR_RUS
             {
                 try
                 {
-                    if (File.Exists(CurDir + "updater.exe"))
+                    if (File.Exists(CurDir + "updater.exe"))//Если остался старый патч, удаляем
                         File.Delete(CurDir + "updater.exe");
-                    if (!Directory.Exists("tmp"))
+                    if (!Directory.Exists("tmp"))//Создаём временную директорию
                         Directory.CreateDirectory("tmp");
-                    if (File.Exists(CurDir + "tmp\\info.txt"))
+                    if (File.Exists(CurDir + "tmp\\info.txt"))//Удаляем файл с информацией о последнем патче
                         File.Delete(CurDir + "tmp\\info.txt");
-                    Downloading_Files("https://drive.google.com/uc?export=download&id=1VjlEABAWwP1K-0gKgskSkO29gpimKvkC", "tmp\\info.txt"); //Загружаем файл с информацией
+                    Downloading_Files("https://drive.google.com/uc?export=download&id=1VjlEABAWwP1K-0gKgskSkO29gpimKvkC", "tmp\\info.txt");//Загружаем файл с информацией о версии приложения
                     string version_current = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                     string version_new = version_current;
-                    version_new = File.ReadLines("tmp\\info.txt").Skip(0).First(); //Считываем первую строку, в ней указана версия
-                    if (version_new != version_current) //Показываем ссылку обновлеия программы
+                    version_new = File.ReadLines("tmp\\info.txt").Skip(0).First();//Считываем первую строку, в ней указана версия
+                    if (version_new != version_current)//Показываем ссылку обновлеия программы
                     {
                         Updater.Visible = true;
                         Update_app.Visible = true;
                     }
                 }
-                catch (Exception e) //Отлавливаем ошибку
+                catch (Exception e)//Отлавливаем ошибку, в случае если она возникает
                 {
-                    Logging(e.Message); //Записываем в лог ошибку
-                    LogBox.AppendText("Не удалось проверить наличие новой версии. Следите за обновлениями в группе ВК.\n");
+                    Logging(e.Message);//Записываем в лог ошибку
+                    LogBox.AppendText("Не удалось проверить наличие новой версии. Следите за обновлениями в группе ВК или в Discord канале.\n");
                 }
             }
         }
-        private void Downloading_Files(string link, string filename) //Загрузка файлов из интернета
+
+        private void Downloading_Files(string link, string filename)//Загрузка файлов из интернета
         {
             WebClient webClient = new WebClient();
             webClient.DownloadFile(new Uri(link), filename);
         }
-        private void Logging(string Log) //Запись Логов
+
+        private void Logging(string Log)//Запись Логов
         {
             using (StreamWriter logging = new StreamWriter("log.txt", true, encoding: Encoding.UTF8))
                 logging.WriteLine(Log);
         }
-        private void TryFix() //Если файлы называются неправильно, пробуем их чинить
+
+        private void TryFix() //Если файлы называются неправильно, пробуем их чинить (приложение закрылось аварийно)
         {
             if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor"))
             {
@@ -1922,53 +1742,66 @@ namespace SWToR_RUS
                 File.Move(GamePath + "\\Assets\\swtor_main_global_1_tmp.tor", GamePath + "\\Assets\\swtor_main_global_1.tor");
             }
         }
-        private void Steam_Rename() //Переименование файлов для Steam версии
+
+        private void Steam_Rename()//Переименование файлов для Steam версии
         {
-            if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor") && File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor") && File.Exists(GamePath + "\\Assets\\swtor_maln_global_1.tor")) //Если русификатор был установлен - подменяем файлы
+            if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor") && File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor") && File.Exists(GamePath + "\\Assets\\swtor_maln_global_1.tor"))//Если русификатор был установлен - подменяем файлы
             {
                 File.Move(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor");
                 File.Move(GamePath + "\\Assets\\swtor_main_global_1.tor", GamePath + "\\Assets\\swtor_main_global_1_tmp.tor");
                 File.Move(GamePath + "\\Assets\\swtor_maln_global_1.tor", GamePath + "\\Assets\\swtor_main_global_1.tor");
-                if (gender == 1) //Если персонаж мужской
+                if (gender == 1)//Если персонаж мужской
                     File.Move(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1.tor");
                 else
                     File.Move(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor", GamePath + "\\Assets\\swtor_en-us_global_1.tor");
             }
         }
 
-        private async void Form1_Shown(object sender, EventArgs e)
+        private async void Form1_Shown(object sender, EventArgs e)//Выполняем загрузку недостающих модулей, проверку версии, количество новых строк перевода
         {
             LogBox.AppendText("Производится запуск русификатора...подождите...\n");
-            LogBox.AppendText("Проверка наличия обновлений...\n");            
-            await Task.Run(() => loading_info());
+            LogBox.AppendText("Проверка наличия обновлений...\n");
+            this.Enabled = false;
+            await Task.Run(() => Loading_info());
+            this.Enabled = true;
         }
-        private void loading_info()
+        private void Loading_info()
         {
-            if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "geckodriver.exe"))
+            if (!File.Exists("db\\hashes_filename.txt"))//Проверяем наличие файла с хэшами игры
             {
-                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загружаем новые компоненты...\n")));
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл hashes_filename.txt...начинаем загрузку...\n")));
+                Downloading_Files("https://drive.google.com/uc?export=download&id=17LYGNgjgARgIxixgytyFoXaOw5C58aBN", "db\\hashes_filename.txt");//Загружаем обновление
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
+            }
+            if (!File.Exists("geckodriver.exe"))//Проверяем наличие драйвера для Firefox
+            {
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл geckodriver.exe...начинаем загрузку...\n")));
                 Downloading_Files("https://drive.google.com/uc?export=download&id=1y3f42gldFXrisycqGboHrYzBRwcNQEbY", "geckodriver.exe"); //Загружаем обновление
-                if (File.Exists("db\\translate.db3"))
-                    File.Delete("db\\translate.db3");
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
+            }
+            if (!File.Exists("db\\translate.db3"))
+            {
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл базы переводов translate.db3...начинаем загрузку...\n")));
                 FileDownloader.DownloadFileFromURLToPath("https://drive.google.com/file/d/1fqQhx8I3fWjmm2SYmZLkfk_Ndmd-5P6M/view?usp=sharing", "db\\translate.db3");
-                Downloading_Files("https://drive.google.com/uc?export=download&id=17LYGNgjgARgIxixgytyFoXaOw5C58aBN", "db\\hashes_filename.txt"); //Загружаем обновление               
-                    
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
             }
             if (!File.Exists("WebDriver.dll"))
             {
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл WebDriver.dll...начинаем загрузку...\n")));
                 Downloading_Files("https://drive.google.com/uc?export=download&id=1lgTw0r1I85tg18Y_K3Rs5QMxYuEQR58Q", "WebDriver.dll"); //Загружаем обновление
                 Downloading_Files("https://drive.google.com/uc?export=download&id=1Q74tFuTeb1MU_esTBLQ1EfLSRRxNoIOg", "WebDriver.xml"); //Загружаем обновление
+                LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
             }
             MySqlConnection MysSQL_Connection = new MySqlConnection(connStr_mysql); //Объявляем соединение с БД
             string sql="";
             try
             {
-                MysSQL_Connection.Open(); //Устанавливаем соединение с БД
+                MysSQL_Connection.Open();//Устанавливаем соединение с БД
                 sql = "SELECT COUNT(*) FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
                 MySqlCommand command = new MySqlCommand(sql, MysSQL_Connection);
-                int counrow = Int32.Parse(command.ExecuteScalar().ToString()); //Получаем количество записей в таблице пользовательских переводов
+                int counrow = Int32.Parse(command.ExecuteScalar().ToString());//Получаем количество записей в таблице пользовательских переводов
                 command.Dispose();
-                MysSQL_Connection.Dispose(); //Закрываем соединение с удалённой базой
+                MysSQL_Connection.Close();//Закрываем соединение с удалённой базой
                 if (counrow == 0)
                 {
                     updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Соединение установлено! Новых переводов не обнаружено!"));
@@ -1982,7 +1815,7 @@ namespace SWToR_RUS
                     upload_from_server.Invoke((MethodInvoker)(() => upload_from_server.Enabled = true));
                 }
             }
-            catch (Exception eddd) //Отлавливаем ошибки
+            catch (Exception eddd)//Отлавливаем ошибки
             {
                 Logging(eddd.Message); //Записываем в лог ошибку                
                 updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Не удалось соединиться с удалённой базой!"));
@@ -2000,9 +1833,9 @@ namespace SWToR_RUS
                     sqlite_cmd.CommandText = sqllite_select;
                     float count_trans_rows = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
                     float percentag = (count_trans_rows / count_all_rows) * 100;
-                    row_translated.Invoke((MethodInvoker)(() => row_translated.Text = Math.Round(percentag, 2) + "% (" + count_trans_rows + "/" + count_all_rows + ")"));
-                    string sql_insert = "SELECT translator_m,translator_w FROM Translated GROUP by translator_m";
-                    sqlite_cmd.CommandText = sql_insert;
+                    row_translated.Invoke((MethodInvoker)(() => row_translated.Text = Math.Round(percentag, 2) + "% (" + count_trans_rows + "/" + count_all_rows + ")"));//процентр перевода показываем
+                    sqllite_select = "SELECT translator_m,translator_w FROM Translated GROUP by translator_m";
+                    sqlite_cmd.CommandText = sqllite_select;
                     SQLiteDataReader r = sqlite_cmd.ExecuteReader();
                     while (r.Read())
                     {
@@ -2012,6 +1845,7 @@ namespace SWToR_RUS
                             list_translators.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));
                     }
                     r.Close();
+                    sqlite_cmd.Dispose();
                     sqlite_conn.Close();
                 }
             }
@@ -2050,46 +1884,35 @@ namespace SWToR_RUS
                 while (!sr_trans.EndOfStream)
                     info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(sr_trans.ReadLine() + "\n")));
             }
+            if (!File.Exists("db\\translate_backup.db3"))
+                recover.Invoke((MethodInvoker)(() => recover.Enabled=false));
+            if (Directory.GetFiles("user_translation\\", "*.xml").Length == 0)
+                upload_to_server.Invoke((MethodInvoker)(() => upload_to_server.Enabled = false));
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Готово!\n")));
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Русификатор запущен! Приятного использования!\n")));
         }
 
-        private async void ins_font_Click(object sender, EventArgs e)
+        private async void Ins_font_Click(object sender, EventArgs e)//Устнавливаем только шрифты
         {
-            Install_btn.Enabled = false; //Отключаем на время установки все элементы
-            del_btn.Enabled = false;
-            ChangePathButton.Enabled = false;
-            ChooseSith.Enabled = false;
-            ChooseSit.Enabled = false;
-            ChooseMen.Enabled = false;
-            ChooseWomen.Enabled = false;
-            dis_skills.Enabled = false;
-            btn_info.Enabled = false;
-            google_opt.Enabled = false;
-            auto_translate.Enabled = false;
-            changes.Enabled = false;
-            upload_to_server.Enabled = false;
-            upload_from_server.Enabled = false;
-            recover.Enabled = false;
-            editor_btn.Enabled = false;
-            ins_font.Enabled = false;
-            auth_translate.Enabled = false;
-            if (ins_font.Text == "Удалить шрифты" && RusFontsInstalled == 1 && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup") && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor"))
+            Buttons_activity(0);
+            if (Ins_font.Text == "Удалить шрифты" && RusFontsInstalled == 1 && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup") && File.Exists(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor"))
             {
                 LogBox.AppendText("Удаление шрифтов...\n");
                 File.Delete(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
                 File.Move(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup", GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor");
+                Ins_font.Text = "Установить шрифт";
+                RusFontsInstalled = 0;
                 LogBox.AppendText("Удаление шрифтов завершено!\n");
             }
             else
             {
                 LogBox.AppendText("Установка шрифтов...\n");
+                TryFix();
                 await CopyFileAsync(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor", GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor_backup");
                 byte[] array = File.ReadAllBytes("db\\fonts.gfx");
                 int z = 290505;
                 int f = 465311;
-                string str = ConfigurationManager.AppSettings["gamepath"];
-                FileStream fileStream = new FileStream(str + "\\Assets\\swtor_main_gfx_assets_1.tor", FileMode.Open, FileAccess.ReadWrite);
+                FileStream fileStream = new FileStream(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor", FileMode.Open, FileAccess.ReadWrite);
                 int num = EndOff1(fileStream);
                 BinaryWriter binaryWriter = new BinaryWriter(fileStream);
                 uint num2 = (uint)fileStream.Length;
@@ -2110,27 +1933,11 @@ namespace SWToR_RUS
                 Config.AppSettings.Settings["firstrun"].Value = "0";
                 Config.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
-                ins_font.Text = "Удалить шрифты";
+                Ins_font.Text = "Удалить шрифты";
+                RusFontsInstalled = 1;
+                RusInstalled = 0;
                 LogBox.AppendText("Установка шрифтов завершена!\n");
-                del_btn.Enabled = true;
-                ChangePathButton.Enabled = true;
-                ChooseSith.Enabled = true;
-                ChooseSit.Enabled = true;
-                ChooseMen.Enabled = true;
-                ChooseWomen.Enabled = true;
-                btn_info.Enabled = true;
-                upload_to_server.Enabled = true;
-                upload_from_server.Enabled = true;
-                recover.Enabled = true;
-                editor_btn.Enabled = true;
-                dis_skills.Enabled = true;
-                google_opt.Enabled = true;
-                Install_btn.Enabled = true;
-                if (google_opt.Checked == true)
-                    auto_translate.Enabled = true;
-                if (auto_translate.Checked == true)
-                    changes.Enabled = true;
-                auth_translate.Enabled = true;
+                Buttons_activity(1);
             }
         }
         public int EndOff(string filename)
@@ -2235,17 +2042,17 @@ namespace SWToR_RUS
             return result;
         }
 
-        private void vk_link_Click(object sender, EventArgs e)
+        private void Vk_link_Click(object sender, EventArgs e)
         {
             Process.Start("https://vk.com/club195326840");
         }
 
-        private void discord_link_Click(object sender, EventArgs e)
+        private void Discord_link_Click(object sender, EventArgs e)
         {
             Process.Start("https://discord.gg/E6adxtWWfd");
         }
 
-        private void auth_translate_CheckedChanged(object sender, EventArgs e)
+        private void Auth_translate_CheckedChanged(object sender, EventArgs e)//Чекбокс изменения загрузки блокированных переводов
         {
             string js;
             if (auth_translate.Checked)
@@ -2254,6 +2061,186 @@ namespace SWToR_RUS
                 js = "0";
             Config.AppSettings.Settings["auth_translate"].Value = js;
             Config.Save(ConfigurationSaveMode.Modified);
+        }
+
+        private void Config_Work()//Работаем с конфигурационным файлом (проверка выставление отметок в интерфейсе)
+        {
+            if (!File.Exists("SWToR_RUS.exe.Config"))//Проверяем существует ли файл конфигурации,если нет создаём новый файл конфигурации
+            {
+                CreateConfig();
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+            vpo.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString(); //Версия программы
+                                                                                     //Далее проверяем наличие элементов конфига
+            if (Config.AppSettings.Settings["a_translate"] == null)//Параметр отвечающий за автоматический перевод новых патчей
+                Config.AppSettings.Settings.Add("a_translate", "0");
+            if (Config.AppSettings.Settings["changes"] == null)//Параметр отвечающий за проверку изменений в текстах после новых патчей
+                Config.AppSettings.Settings.Add("changes", "0");
+            if (ConfigurationManager.AppSettings["author"] == null) //Параметр, в котором хранится имя Автора перевода
+                Config.AppSettings.Settings.Add("author", "");
+            if (ConfigurationManager.AppSettings["email"] == null) //Параметр, в котором хранится почта Автора перевода
+                Config.AppSettings.Settings.Add("email", "");
+            if (ConfigurationManager.AppSettings["password"] == null) //Параметр, в котором хранится пароль Автора перевода
+                Config.AppSettings.Settings.Add("password", "");
+            if (ConfigurationManager.AppSettings["backup_row"] == null) //Параметр, в котором хранится бэкап бд
+                Config.AppSettings.Settings.Add("backup_row", "0");
+            if (ConfigurationManager.AppSettings["auth_translate"] == null) //Параметр, отвечает за изменение заблокированных переводов
+                Config.AppSettings.Settings.Add("auth_translate", "0");
+            if (ConfigurationManager.AppSettings["translate_restrict"] == null)//Параметр, отвечает за блокировку переводов автора
+                Config.AppSettings.Settings.Add("translate_restrict", "0");
+            if (ConfigurationManager.AppSettings["items"] == null)//Параметр, отвечает за отключение предметов
+                Config.AppSettings.Settings.Add("items", "0");
+            if (ConfigurationManager.AppSettings["non_dialoge"] == null)//Параметр, отвечает за отключение предметов
+                Config.AppSettings.Settings.Add("non_dialoge", "0");
+            Config.Save(ConfigurationSaveMode.Minimal);//Сохраняем конфигурацию
+            ConfigurationManager.RefreshSection("appSettings");//Обновляем конфиг для приложения
+            gender = Int32.Parse(Config.AppSettings.Settings["gender"].Value);
+            if (gender == 1)//Выставляем выключатели по конфигу
+                ChooseMen.Checked = true;
+            else
+                ChooseWomen.Checked = true;
+            if (Config.AppSettings.Settings["sith"].Value == "0")
+                ChooseSith.Checked = true;
+            else
+                ChooseSit.Checked = true;
+            if (Config.AppSettings.Settings["skill"].Value == "2")
+                Dis_skills.Checked = true;
+            else
+                Dis_skills.Checked = false;
+            if (Config.AppSettings.Settings["items"].Value == "1")
+                Dis_items.Checked = true;
+            else
+                Dis_items.Checked = false;
+            if (Config.AppSettings.Settings["non_dialoge"].Value == "1")
+            {
+                Dis_non_dialoge.Checked = true;
+                Dis_skills.Checked = false;
+                Dis_skills.Enabled = false;
+                Dis_items.Checked = false;
+                Dis_items.Enabled = false;
+                auto_translate.Checked = false;
+                auto_translate.Enabled = false;
+                changes.Checked = false;
+                changes.Enabled = false;
+            }
+            else
+                Dis_non_dialoge.Checked = false;
+            if (Config.AppSettings.Settings["google"].Value == "1")
+                google_opt.Checked = true;
+            else
+            {
+                google_opt.Checked = false;
+                auto_translate.Checked = false;
+                changes.Checked = false;
+                auto_translate.Enabled = false;
+                changes.Enabled = false;
+                Config.AppSettings.Settings["a_translate"].Value = "0";
+                Config.AppSettings.Settings["changes"].Value = "0";
+            }
+            if (Config.AppSettings.Settings["a_translate"].Value == "1" && Config.AppSettings.Settings["google"].Value == "1" && Config.AppSettings.Settings["skill"].Value == "0" && Config.AppSettings.Settings["items"].Value == "0")
+            {
+                auto_translate.Checked = true;
+                if (Config.AppSettings.Settings["changes"].Value == "1")
+                    changes.Checked = true;
+                else
+                    changes.Checked = false;
+            }
+            else
+            {
+                auto_translate.Checked = false;
+                changes.Checked = false;
+                changes.Enabled = false;
+                Config.AppSettings.Settings["changes"].Value = "0";
+                Config.AppSettings.Settings["a_translate"].Value = "0";
+            }
+            if (Config.AppSettings.Settings["auth_translate"].Value == "1")
+                auth_translate.Checked = true;
+            else
+                auth_translate.Checked = false;
+            GamePath = Config.AppSettings.Settings["gamepath"].Value;
+            Config.Save(ConfigurationSaveMode.Modified);//Сохраняем конфигурацию
+            ConfigurationManager.RefreshSection("appSettings");//Обновляем конфиг для приложения
+        }
+
+        private void Dis_items_CheckedChanged(object sender, EventArgs e)//Переключатель отключения перевода предметов и описаний
+        {
+            string js;
+            if (Dis_items.Checked)
+            {
+                js = "1";
+                auto_translate.Checked = false;
+                auto_translate.Enabled = false;
+                changes.Checked = false;
+                changes.Enabled = false;
+            }
+            else
+            {
+                js = "0";
+                if (google_opt.Checked == true)
+                    auto_translate.Enabled = true;
+            }
+            Config.AppSettings.Settings["items"].Value = js;
+            Config.Save(ConfigurationSaveMode.Modified);
+        }
+
+        private void Dis_non_dialoge_CheckedChanged(object sender, EventArgs e)//Переключатель отключения всего кроме диалогов
+        {
+            string js;
+            if (Dis_non_dialoge.Checked)
+            {
+                js = "1";
+                Dis_skills.Checked = false;
+                Dis_skills.Enabled = false;
+                Dis_items.Checked = false;
+                Dis_items.Enabled = false;
+                auto_translate.Checked = false;
+                auto_translate.Enabled = false;
+                changes.Checked = false;
+                changes.Enabled = false;
+            }
+            else
+            {
+                js = "0";
+                Dis_skills.Enabled = true;
+                Dis_items.Enabled = true;
+                if (google_opt.Checked == true)
+                    auto_translate.Enabled = true;
+            }
+            Config.AppSettings.Settings["non_dialoge"].Value = js;
+            Config.Save(ConfigurationSaveMode.Modified);
+        }
+
+        public void Buttons_activity(int what_do)
+        {
+            if (what_do==0)
+            {
+                Install_btn.Enabled = false;
+                Ins_font.Enabled = false;
+                del_btn.Enabled = false;
+                upload_to_server.Enabled = false;
+                upload_from_server.Enabled = false;
+                recover.Enabled = false;
+                editor_btn.Enabled = false;
+                ChangePathButton.Enabled = false;
+                btn_info.Enabled = false;
+            }
+            else if (what_do==1)
+            {
+                if (updatedownload.Text != "Соединение установлено! Новых переводов не обнаружено!")
+                    upload_from_server.Enabled = true;
+                if (Directory.GetFiles("user_translation\\", "*.xml").Length >0)
+                    upload_to_server.Enabled = true;
+                if (File.Exists("db\\translate_backup.db3"))
+                    recover.Enabled = true;
+                editor_btn.Enabled = true;
+                ChangePathButton.Enabled = true;
+                btn_info.Enabled = true;
+                Install_btn.Enabled = true;
+                if (RusInstalled == 1)
+                    del_btn.Enabled = true;
+                else
+                    Ins_font.Enabled = true;
+            }
         }
     }
 
@@ -2266,9 +2253,11 @@ namespace SWToR_RUS
         public static string ConnectToShare(string uri, string username, string password)
         {
             //Create netresource and point it at the share
-            NETRESOURCE nr = new NETRESOURCE();
-            nr.dwType = RESOURCETYPE_DISK;
-            nr.lpRemoteName = uri;
+            NETRESOURCE nr = new NETRESOURCE
+            {
+                dwType = RESOURCETYPE_DISK,
+                lpRemoteName = uri
+            };
 
             //Create the share
             int ret = WNetUseConnection(IntPtr.Zero, nr, password, username, 0, null, null, null);

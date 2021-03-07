@@ -96,21 +96,21 @@ namespace SWToR_RUS
             return true;
         }
 
-        bool isValid(string email)
+        bool IsValid(string email)
         {
             string pattern = "[.\\-_a-z0-9]+@([a-z0-9][\\-a-z0-9]+\\.)+[a-z]{2,6}";
             Match isMatch = Regex.Match(email, pattern, RegexOptions.IgnoreCase);
             return isMatch.Success;
         }
 
-        public void auth_Click(object sender, EventArgs e)
+        public void Auth_Click(object sender, EventArgs e)
         {
             string email_box = email.Text, name_box = name.Text, password_box = password.Text;
             Configuration configuration = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string tr_restrict = "0";
             if (Translate_Restrict.Checked == true)
                 tr_restrict = "1";
-            if (isValid(email_box))
+            if (IsValid(email_box))
             {
                 if(name_box != "Deepl" && name_box != "deepl") {
                     using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
@@ -230,7 +230,7 @@ namespace SWToR_RUS
             base.OnFormClosing(e);
         }
 
-        private void email_TextChanged(object sender, EventArgs e)
+        private void Email_TextChanged(object sender, EventArgs e)
         {
             Check_auth();
         }
@@ -248,12 +248,12 @@ namespace SWToR_RUS
             }
         }
 
-        private void password_TextChanged(object sender, EventArgs e)
+        private void Password_TextChanged(object sender, EventArgs e)
         {
             Check_auth();
         }
 
-        private void name_TextChanged(object sender, EventArgs e)
+        private void Name_TextChanged(object sender, EventArgs e)
         {
             Check_auth();
         }
