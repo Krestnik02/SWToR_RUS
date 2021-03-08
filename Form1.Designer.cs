@@ -713,6 +713,7 @@ namespace SWToR_RUS
             this.MaximizeBox = false;
             this.Name = "Form1";
             this.Text = "Star Wars The Old Republic Русификатор";
+            this.Activated += new System.EventHandler(this.Form1_Activated);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Shown += new System.EventHandler(this.Form1_Shown);
             this.groupBox1.ResumeLayout(false);

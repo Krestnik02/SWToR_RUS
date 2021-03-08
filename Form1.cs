@@ -2237,6 +2237,15 @@ namespace SWToR_RUS
                     Ins_font.Enabled = true;
             }
         }
+
+        private void Form1_Activated(object sender, EventArgs e)
+        {
+            if (Form2.upload_to_server_info == 1)
+            {
+                upload_to_server.Enabled = true;
+                Form2.upload_to_server_info = 0;
+            }
+        }
     }
 
     public static class NetworkShare

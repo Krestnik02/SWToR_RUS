@@ -78,6 +78,8 @@ namespace SWToR_RUS
             return true;
         }
 
+        public static int upload_to_server_info = 0;
+
         public Button upload_to_server = Application.OpenForms["Form1"].Controls["upload_to_server"] as Button;
 
         public Form2()
@@ -359,7 +361,7 @@ namespace SWToR_RUS
             }
             if (num_edited_rows != 0)
             {
-                upload_to_server.Invoke((MethodInvoker)(() => upload_to_server.Enabled = true));
+                upload_to_server_info = 1;
                 MessageBox.Show("Файл сохранён в папке user_translation! Сохранено " + num_edited_rows + " строк.");
             }
             else
@@ -718,70 +720,6 @@ namespace SWToR_RUS
             }
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if(File.Exists("export\\error.xml"))
-            {
-                // Give the LinkedResource an ID which should be passed into the 'cid' of the <img> tag -
-                var sb = new StringBuilder("");
-                sb.Append("<body>");
-                sb.Append($"<img src=\"cid:logo\" width=\"150\" height=\"150\" alt=\"Logo\"/>");
-                sb.Append("<p>Здраствуйте участник проекта <b>SWToR_RUS</b>! Это письмо отправлено Вам так как ваш перевод хотели изменить.<br /><br />");
-                sb.Append("Пожалуйста воспользуйтесь редактором перевода для внесения изменений, если вы посчитаете их нужными.");
-                sb.Append("<br /><br />Это письмо отправленно автоматически, пожалуйста не отвечайте на него");
-                sb.Append("</p></body>");
-                var emailBodyHtml = sb.ToString();
-                var emailBodyPlain = "This is the plain text email body";
-
-                using (var message = new MailMessage())
-                using (var logoMemStream = new MemoryStream())
-                using (var altViewHtml = AlternateView.CreateAlternateViewFromString(emailBodyHtml, null, MediaTypeNames.Text.Html))
-                using (var altViewPlainText = AlternateView.CreateAlternateViewFromString(emailBodyPlain, null, MediaTypeNames.Text.Plain))
-                using (var client = new SmtpClient("smtp.yandex.com")
-                {
-                    Port = 25,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential("swtorrus-community@yandex.ru", "sAq12w#$%"),
-                    EnableSsl = false
-                })
-                {
-                    message.To.Add(new MailAddress("super.gird2012@yandex.ru"));
-                    message.From = new MailAddress("swtorrus-community@yandex.ru", "SWToR_RUS COMMUNITY");
-                    message.Attachments.Add(new Attachment("export\\error.xml"));
-                    message.Subject = "Ваши строчки перевода хотят изменить";
-                    /*message.IsBodyHtml = true;*/
-
-                    // Assume that GetLogo() just returns a Bitmap (for my particular problem I had to return a logo in a specified colour, hence the hexColour parameter!)
-                    byte[] reader = File.ReadAllBytes("Resources\\swtor.jpg");
-                    MemoryStream image1 = new MemoryStream(reader);
-                    logoMemStream.Position = 0;
-
-                    using (LinkedResource logoLinkedResource = new LinkedResource(logoMemStream))
-                    {
-                        logoLinkedResource.ContentId = "logo";
-                        logoLinkedResource.ContentType = new ContentType("image/jpeg");
-                        altViewHtml.LinkedResources.Add(logoLinkedResource);
-                        message.AlternateViews.Add(altViewHtml);
-                        message.AlternateViews.Add(altViewPlainText);
-                        //Доделать тут
-                        client.Send(message);
-                    }
-                }
-            }
-
-            Form ifrm = Application.OpenForms[0];
-            ifrm.Show();
-
-            //закрываем форму авторизации, если открыта
-            Form fc = Application.OpenForms["Form3"];
-            if (fc != null)
-            {
-                fc.Hide();
-            }
-            Hide();
-        }
-
         private void Searchbox_TextChanged(object sender, EventArgs e)
         {
             data_trans_file.Rows.Clear();
@@ -978,6 +916,12 @@ namespace SWToR_RUS
             sqlite_conn.Close();
             gotofile.Enabled = false;
             search_filename.Enabled = false;
+        }
+
+        private void Form2_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            Form ifrm = Application.OpenForms[0];
+            ifrm.Show();
         }
     }
 }
