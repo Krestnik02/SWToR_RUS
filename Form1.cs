@@ -19,15 +19,8 @@ using System.Data.SQLite;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ICSharpCode.SharpZipLib.Zip.Compression;
-using System.Text.RegularExpressions;
-using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.Interactions;
-using System.Web.UI;
 
 namespace SWToR_RUS
 {
@@ -1884,8 +1877,10 @@ namespace SWToR_RUS
                 while (!sr_trans.EndOfStream)
                     info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(sr_trans.ReadLine() + "\n")));
             }
-            if (!File.Exists("db\\translate_backup.db3"))
+            if (!File.Exists("db\\translate_backup.db3") || Config.AppSettings.Settings["backup_row"] == null)
                 recover.Invoke((MethodInvoker)(() => recover.Enabled=false));
+            if (!Directory.Exists("user_translation"))
+                Directory.CreateDirectory("user_translation");
             if (Directory.GetFiles("user_translation\\", "*.xml").Length == 0)
                 upload_to_server.Invoke((MethodInvoker)(() => upload_to_server.Enabled = false));
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Готово!\n")));
@@ -2076,21 +2071,21 @@ namespace SWToR_RUS
                 Config.AppSettings.Settings.Add("a_translate", "0");
             if (Config.AppSettings.Settings["changes"] == null)//Параметр отвечающий за проверку изменений в текстах после новых патчей
                 Config.AppSettings.Settings.Add("changes", "0");
-            if (ConfigurationManager.AppSettings["author"] == null) //Параметр, в котором хранится имя Автора перевода
+            if (Config.AppSettings.Settings["author"] == null) //Параметр, в котором хранится имя Автора перевода
                 Config.AppSettings.Settings.Add("author", "");
-            if (ConfigurationManager.AppSettings["email"] == null) //Параметр, в котором хранится почта Автора перевода
+            if (Config.AppSettings.Settings["email"] == null) //Параметр, в котором хранится почта Автора перевода
                 Config.AppSettings.Settings.Add("email", "");
-            if (ConfigurationManager.AppSettings["password"] == null) //Параметр, в котором хранится пароль Автора перевода
+            if (Config.AppSettings.Settings["password"] == null) //Параметр, в котором хранится пароль Автора перевода
                 Config.AppSettings.Settings.Add("password", "");
-            if (ConfigurationManager.AppSettings["backup_row"] == null) //Параметр, в котором хранится бэкап бд
+            if (Config.AppSettings.Settings["backup_row"] == null) //Параметр, в котором хранится бэкап бд
                 Config.AppSettings.Settings.Add("backup_row", "0");
-            if (ConfigurationManager.AppSettings["auth_translate"] == null) //Параметр, отвечает за изменение заблокированных переводов
+            if (Config.AppSettings.Settings["auth_translate"] == null) //Параметр, отвечает за изменение заблокированных переводов
                 Config.AppSettings.Settings.Add("auth_translate", "0");
-            if (ConfigurationManager.AppSettings["translate_restrict"] == null)//Параметр, отвечает за блокировку переводов автора
+            if (Config.AppSettings.Settings["translate_restrict"] == null)//Параметр, отвечает за блокировку переводов автора
                 Config.AppSettings.Settings.Add("translate_restrict", "0");
-            if (ConfigurationManager.AppSettings["items"] == null)//Параметр, отвечает за отключение предметов
+            if (Config.AppSettings.Settings["items"] == null)//Параметр, отвечает за отключение предметов
                 Config.AppSettings.Settings.Add("items", "0");
-            if (ConfigurationManager.AppSettings["non_dialoge"] == null)//Параметр, отвечает за отключение предметов
+            if (Config.AppSettings.Settings["non_dialoge"] == null)//Параметр, отвечает за отключение предметов
                 Config.AppSettings.Settings.Add("non_dialoge", "0");
             Config.Save(ConfigurationSaveMode.Minimal);//Сохраняем конфигурацию
             ConfigurationManager.RefreshSection("appSettings");//Обновляем конфиг для приложения

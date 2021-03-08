@@ -7,13 +7,11 @@ using System.Xml;
 using System.Net;
 using System.IO;
 using System.Data.SQLite;
-using MySql.Data.MySqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Configuration;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Net.Mail;
 using System.Net.Mime;
 

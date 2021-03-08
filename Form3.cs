@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
-using System.Web.UI;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Configuration;
@@ -127,23 +119,20 @@ namespace SWToR_RUS
                                 {
                                     if (VerifyHashedPassword(row["pass"].ToString(), password_box))
                                     {
-                                        configuration.AppSettings.Settings["author"].Value = row["name"].ToString();
-                                        configuration.AppSettings.Settings["email"].Value = row["email"].ToString();
-                                        configuration.AppSettings.Settings["password"].Value = row["pass"].ToString();
                                         if (row["status"].ToString() != tr_restrict)
                                         {
                                             string sql_update = "UPDATE users SET status='" + tr_restrict + "' WHERE id='" + row["id"].ToString() + "'";
                                             MySqlCommand update = new MySqlCommand(sql_update, conn);
                                             update.ExecuteNonQuery();
                                         }
-                                        configuration.Save(ConfigurationSaveMode.Modified);
-                                        MessageBox.Show("Вы успешно авторизованы!", "Авторизация", MessageBoxButtons.OK);
                                         appClosing = 10;
                                         configuration.AppSettings.Settings["author"].Value = name_box;
                                         configuration.AppSettings.Settings["email"].Value = email_box;
                                         configuration.AppSettings.Settings["password"].Value = password_box;
                                         configuration.AppSettings.Settings["translate_restrict"].Value = tr_restrict;
                                         configuration.Save(ConfigurationSaveMode.Modified);
+                                        ConfigurationManager.RefreshSection("appSettings");//Обновляем конфиг для приложения
+                                        MessageBox.Show("Вы успешно авторизованы!", "Авторизация", MessageBoxButtons.OK);
                                         Close();
                                     } else
                                     {
@@ -177,6 +166,7 @@ namespace SWToR_RUS
                                         configuration.AppSettings.Settings["password"].Value = password_box;
                                         configuration.AppSettings.Settings["translate_restrict"].Value = tr_restrict;
                                         configuration.Save(ConfigurationSaveMode.Modified);
+                                        ConfigurationManager.RefreshSection("appSettings");//Обновляем конфиг для приложения
                                         MessageBox.Show("Вы успешно зарегистрированны!", "Авторизация", MessageBoxButtons.OK);
                                         appClosing = 10;
                                         Close();
