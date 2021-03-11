@@ -99,6 +99,7 @@ namespace SWToR_RUS
             this.vk_link = new System.Windows.Forms.PictureBox();
             this.discord_link = new System.Windows.Forms.PictureBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.Updater_check = new System.Windows.Forms.PictureBox();
             this.groupBox1.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -108,6 +109,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).BeginInit();
             this.SuspendLayout();
             // 
             // Install_btn
@@ -251,6 +253,7 @@ namespace SWToR_RUS
             // 
             // upload_from_server
             // 
+            this.upload_from_server.Enabled = false;
             this.upload_from_server.Location = new System.Drawing.Point(8, 132);
             this.upload_from_server.Name = "upload_from_server";
             this.upload_from_server.Size = new System.Drawing.Size(210, 29);
@@ -684,12 +687,26 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.discord_link, "Офиициальный Discord канал");
             this.discord_link.Click += new System.EventHandler(this.Discord_link_Click);
             // 
+            // Updater_check
+            // 
+            this.Updater_check.BackgroundImage = global::SWToR_RUS.Properties.Resources.update;
+            this.Updater_check.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.Updater_check.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.Updater_check.Location = new System.Drawing.Point(55, 239);
+            this.Updater_check.Name = "Updater_check";
+            this.Updater_check.Size = new System.Drawing.Size(42, 43);
+            this.Updater_check.TabIndex = 25;
+            this.Updater_check.TabStop = false;
+            this.toolTip1.SetToolTip(this.Updater_check, "Проверить наличие обновлений");
+            this.Updater_check.Click += new System.EventHandler(this.PictureBox1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(854, 361);
+            this.Controls.Add(this.Updater_check);
             this.Controls.Add(this.discord_link);
             this.Controls.Add(this.vk_link);
             this.Controls.Add(this.Ins_font);
@@ -731,6 +748,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -792,6 +810,7 @@ namespace SWToR_RUS
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.CheckBox Dis_non_dialoge;
         private System.Windows.Forms.Button Ins_font;
+        private System.Windows.Forms.PictureBox Updater_check;
     }
 }
 

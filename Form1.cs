@@ -535,6 +535,9 @@ namespace SWToR_RUS
         }
         private void Db_convertor_Click(object sender, EventArgs e)
         {
+
+
+
             string transl_a;
             var baseAddress = "https://www.translate.ru/api/soap/getTranslation";
             var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
@@ -1033,9 +1036,77 @@ namespace SWToR_RUS
         private void Btn_info_Click(object sender, EventArgs e)//Окно Информация
         {
             if (ActiveForm.Height == 400)
-                ActiveForm.Height = 600;
+            {
+                Enabled = false;
+                List<string> list_translators = new List<string>();
+                using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
+                {
+                    using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sqlite_conn))
+                    {
+                        sqlite_conn.Open();
+                        string sqllite_select = "SELECT COUNT(DISTINCT text_en) FROM Translated";
+                        sqlite_cmd.CommandText = sqllite_select;
+                        float count_all_rows = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
+                        sqllite_select = "SELECT COUNT(DISTINCT text_en) from Translated WHERE translator_m!='Deepl'";
+                        sqlite_cmd.CommandText = sqllite_select;
+                        float count_trans_rows = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
+                        float percentag = (count_trans_rows / count_all_rows) * 100;
+                        row_translated.Invoke((MethodInvoker)(() => row_translated.Text = Math.Round(percentag, 2) + "% (" + count_trans_rows + "/" + count_all_rows + ")"));//процентр перевода показываем
+                        sqllite_select = "SELECT translator_m,translator_w FROM Translated GROUP by translator_m";
+                        sqlite_cmd.CommandText = sqllite_select;
+                        SQLiteDataReader r = sqlite_cmd.ExecuteReader();
+                        while (r.Read())
+                        {
+                            if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_m"].ToString()), StringComparer.OrdinalIgnoreCase))
+                                list_translators.Add(WebUtility.HtmlDecode(r["translator_m"].ToString()));
+                            if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_w"].ToString()), StringComparer.OrdinalIgnoreCase))
+                                list_translators.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));
+                        }
+                        r.Close();
+                        sqlite_cmd.Dispose();
+                        sqlite_conn.Close();
+                    }
+                }
+                string list_translator = "";
+                foreach (string list_trans in list_translators)
+                {
+                    if (list_translator != "" && list_trans == "1")
+                        list_translator += ", Togruth";
+                    else if (list_trans == "1")
+                        list_translator = "Togruth";
+                    if (list_translator != "" && list_trans == "2")
+                        list_translator += ", JKC";
+                    else if (list_trans == "2")
+                        list_translator = "JKC";
+                    if (list_translator != "" && list_trans == "3")
+                        list_translator += ", Deepl";
+                    else if (list_trans == "3")
+                        list_translator = "Deepl";
+                    if (list_translator != "" && list_trans == "4")
+                        list_translator += ", Krestnik02";
+                    else if (list_trans == "4")
+                        list_translator = "Krestnik02";
+                    if (list_translator != "" && list_trans == "5")
+                        list_translator += ", Другие переводчики";
+                    else if (list_trans == "5")
+                        list_translator = "Другие переводчики";
+                    if (list_translator != "" && list_trans != "" && list_trans != "1" && list_trans != "2" && list_trans != "3" && list_trans != "4" && list_trans != "5")
+                        list_translator += ", " + list_trans;
+                    else if (list_trans != "" && list_trans != "1" && list_trans != "2" && list_trans != "3" && list_trans != "4" && list_trans != "5")
+                        list_translator = list_trans;
+                }
+                info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText("Переводчики игры: \n")));
+                info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(list_translator + "\n\n")));
+                using (StreamReader sr_trans = new StreamReader("db\\info.txt", Encoding.Default))
+                {
+                    while (!sr_trans.EndOfStream)
+                        info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(sr_trans.ReadLine() + "\n")));
+                }
+                Height = 600;
+                Enabled = true;
+            }
             else
-                ActiveForm.Height = 400;
+                Height = 400;
         }
 
         private void Google_opt_CheckedChanged(object sender, EventArgs e)//Переключатель Машинного Переводчика
@@ -1187,7 +1258,22 @@ namespace SWToR_RUS
                     if (!Directory.Exists("user_translation\\done"))
                         Directory.CreateDirectory("user_translation\\done");
                     string[] tokens0 = filename.Split(new char[] { '\\' });
-                    File.Move(filename, "user_translation\\done\\"+ tokens0.Last());
+                    if (File.Exists("user_translation\\" + tokens0.Last() + ".xml"))
+                    {
+                        DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите перенести новіе переводы в него?", "Подтверждение", MessageBoxButtons.YesNo);
+                        if (dialogResult == DialogResult.Yes)
+                        {
+                            var lines = File.ReadAllLines("user_translation\\" + tokens0.Last());
+                            File.WriteAllLines("user_translation\\" + tokens0.Last(), lines.Take(lines.Length - 1).ToArray(), encoding: Encoding.UTF8);
+                        }
+                        else
+                        {
+                            string [] tokens1 = tokens0.Last().Split(new string[] { ".xm" }, StringSplitOptions.None);
+                            File.Move(filename, "user_translation\\done\\" + tokens1[0] + "1.xml");
+                        }
+                    }
+                        
+
                 }
                 conn.Close();
                 ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
@@ -1678,32 +1764,6 @@ namespace SWToR_RUS
             }
             else
                 is_run = 1;
-            if (is_run == 1) //Проверяем наличие новой версии
-            {
-                try
-                {
-                    if (File.Exists(CurDir + "updater.exe"))//Если остался старый патч, удаляем
-                        File.Delete(CurDir + "updater.exe");
-                    if (!Directory.Exists("tmp"))//Создаём временную директорию
-                        Directory.CreateDirectory("tmp");
-                    if (File.Exists(CurDir + "tmp\\info.txt"))//Удаляем файл с информацией о последнем патче
-                        File.Delete(CurDir + "tmp\\info.txt");
-                    Downloading_Files("https://drive.google.com/uc?export=download&id=1VjlEABAWwP1K-0gKgskSkO29gpimKvkC", "tmp\\info.txt");//Загружаем файл с информацией о версии приложения
-                    string version_current = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-                    string version_new = version_current;
-                    version_new = File.ReadLines("tmp\\info.txt").Skip(0).First();//Считываем первую строку, в ней указана версия
-                    if (version_new != version_current)//Показываем ссылку обновлеия программы
-                    {
-                        Updater.Visible = true;
-                        Update_app.Visible = true;
-                    }
-                }
-                catch (Exception e)//Отлавливаем ошибку, в случае если она возникает
-                {
-                    Logging(e.Message);//Записываем в лог ошибку
-                    LogBox.AppendText("Не удалось проверить наличие новой версии. Следите за обновлениями в группе ВК или в Discord канале.\n");
-                }
-            }
         }
 
         private void Downloading_Files(string link, string filename)//Загрузка файлов из интернета
@@ -1753,10 +1813,9 @@ namespace SWToR_RUS
         private async void Form1_Shown(object sender, EventArgs e)//Выполняем загрузку недостающих модулей, проверку версии, количество новых строк перевода
         {
             LogBox.AppendText("Производится запуск русификатора...подождите...\n");
-            LogBox.AppendText("Проверка наличия обновлений...\n");
-            this.Enabled = false;
+            Enabled = false;
             await Task.Run(() => Loading_info());
-            this.Enabled = true;
+            Enabled = true;
         }
         private void Loading_info()
         {
@@ -1785,98 +1844,8 @@ namespace SWToR_RUS
                 Downloading_Files("https://drive.google.com/uc?export=download&id=1Q74tFuTeb1MU_esTBLQ1EfLSRRxNoIOg", "WebDriver.xml"); //Загружаем обновление
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
             }
-            MySqlConnection MysSQL_Connection = new MySqlConnection(connStr_mysql); //Объявляем соединение с БД
-            string sql="";
-            try
-            {
-                MysSQL_Connection.Open();//Устанавливаем соединение с БД
-                sql = "SELECT COUNT(*) FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
-                MySqlCommand command = new MySqlCommand(sql, MysSQL_Connection);
-                int counrow = Int32.Parse(command.ExecuteScalar().ToString());//Получаем количество записей в таблице пользовательских переводов
-                command.Dispose();
-                MysSQL_Connection.Close();//Закрываем соединение с удалённой базой
-                if (counrow == 0)
-                {
-                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Соединение установлено! Новых переводов не обнаружено!"));
-                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.ForeColor = Color.Green));
-                    upload_from_server.Invoke((MethodInvoker)(() => upload_from_server.Enabled = false));
-                }
-                else
-                {
-                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Соединение установлено! С последнего обновления обнаружено " + counrow + " новых строк перевода!"));
-                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.ForeColor = Color.Blue));
-                    upload_from_server.Invoke((MethodInvoker)(() => upload_from_server.Enabled = true));
-                }
-            }
-            catch (Exception eddd)//Отлавливаем ошибки
-            {
-                Logging(eddd.Message); //Записываем в лог ошибку                
-                updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Не удалось соединиться с удалённой базой!"));
-            }
-            List<string> list_translators = new List<string>();
-            using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
-            {
-                using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sqlite_conn))
-                {
-                    sqlite_conn.Open();
-                    string sqllite_select = "SELECT COUNT(DISTINCT text_en) FROM Translated";
-                    sqlite_cmd.CommandText = sqllite_select;
-                    float count_all_rows = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
-                    sqllite_select = "SELECT COUNT(DISTINCT text_en) from Translated WHERE translator_m!='Deepl'";
-                    sqlite_cmd.CommandText = sqllite_select;
-                    float count_trans_rows = Convert.ToInt32(sqlite_cmd.ExecuteScalar());
-                    float percentag = (count_trans_rows / count_all_rows) * 100;
-                    row_translated.Invoke((MethodInvoker)(() => row_translated.Text = Math.Round(percentag, 2) + "% (" + count_trans_rows + "/" + count_all_rows + ")"));//процентр перевода показываем
-                    sqllite_select = "SELECT translator_m,translator_w FROM Translated GROUP by translator_m";
-                    sqlite_cmd.CommandText = sqllite_select;
-                    SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                    while (r.Read())
-                    {
-                        if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_m"].ToString()), StringComparer.OrdinalIgnoreCase))
-                            list_translators.Add(WebUtility.HtmlDecode(r["translator_m"].ToString()));
-                        if (!list_translators.Contains(WebUtility.HtmlDecode(r["translator_w"].ToString()), StringComparer.OrdinalIgnoreCase))
-                            list_translators.Add(WebUtility.HtmlDecode(r["translator_w"].ToString()));
-                    }
-                    r.Close();
-                    sqlite_cmd.Dispose();
-                    sqlite_conn.Close();
-                }
-            }
-            string list_translator = "";
-            foreach (string list_trans in list_translators)
-            {
-                if (list_translator != "" && list_trans == "1")
-                    list_translator += ", Togruth";
-                else if (list_trans == "1")
-                    list_translator = "Togruth";
-                if (list_translator != "" && list_trans == "2")
-                    list_translator += ", JKC";
-                else if (list_trans == "2")
-                    list_translator = "JKC";
-                if (list_translator != "" && list_trans == "3")
-                    list_translator += ", Deepl";
-                else if (list_trans == "3")
-                    list_translator = "Deepl";
-                if (list_translator != "" && list_trans == "4")
-                    list_translator += ", Krestnik02";
-                else if (list_trans == "4")
-                    list_translator = "Krestnik02";
-                if (list_translator != "" && list_trans == "5")
-                    list_translator += ", Другие переводчики";
-                else if (list_trans == "5")
-                    list_translator = "Другие переводчики";
-                if (list_translator != "" && list_trans != "" && list_trans != "1" && list_trans != "2" && list_trans != "3" && list_trans != "4" && list_trans != "5")
-                    list_translator += ", " + list_trans;
-                else if (list_trans != "" && list_trans != "1" && list_trans != "2" && list_trans != "3" && list_trans != "4" && list_trans != "5")
-                    list_translator = list_trans;
-            }
-            info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText("Переводчики игры: \n")));
-            info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(list_translator + "\n\n")));
-            using (StreamReader sr_trans = new StreamReader("db\\info.txt", Encoding.Default))
-            {
-                while (!sr_trans.EndOfStream)
-                    info_trans.Invoke((MethodInvoker)(() => info_trans.AppendText(sr_trans.ReadLine() + "\n")));
-            }
+            
+            
             if (!File.Exists("db\\translate_backup.db3") || Config.AppSettings.Settings["backup_row"] == null)
                 recover.Invoke((MethodInvoker)(() => recover.Enabled=false));
             if (!Directory.Exists("user_translation"))
@@ -2245,6 +2214,69 @@ namespace SWToR_RUS
                 upload_to_server.Enabled = true;
                 Form2.upload_to_server_info = 0;
             }
+        }
+
+        private void PictureBox1_Click(object sender, EventArgs e)
+        {
+            Enabled = false;
+            LogBox.AppendText("Проверка наличия обновлений...\n");
+            //Проверяем наличие новой версии
+            try
+            {
+                if (File.Exists(CurDir + "updater.exe"))//Если остался старый патч, удаляем
+                    File.Delete(CurDir + "updater.exe");
+                if (!Directory.Exists("tmp"))//Создаём временную директорию
+                    Directory.CreateDirectory("tmp");
+                if (File.Exists(CurDir + "tmp\\info.txt"))//Удаляем файл с информацией о последнем патче
+                    File.Delete(CurDir + "tmp\\info.txt");
+                Downloading_Files("https://drive.google.com/uc?export=download&id=1VjlEABAWwP1K-0gKgskSkO29gpimKvkC", "tmp\\info.txt");//Загружаем файл с информацией о версии приложения
+                string version_current = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                string version_new = version_current;
+                version_new = File.ReadLines("tmp\\info.txt").Skip(0).First();//Считываем первую строку, в ней указана версия
+                if (version_new != version_current)//Показываем ссылку обновлеия программы
+                {
+                    Updater.Visible = true;
+                    Update_app.Visible = true;
+                }
+            }
+            catch (Exception es)//Отлавливаем ошибку, в случае если она возникает
+            {
+                Logging(es.Message);//Записываем в лог ошибку
+                LogBox.AppendText("Не удалось проверить наличие новой версии. Следите за обновлениями в группе ВК или в Discord канале.\n");
+            }
+
+            MySqlConnection MysSQL_Connection = new MySqlConnection(connStr_mysql); //Объявляем соединение с БД
+            string sql = "";
+            try
+            {
+                MysSQL_Connection.Open();//Устанавливаем соединение с БД
+                sql = "SELECT COUNT(*) FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
+                MySqlCommand command = new MySqlCommand(sql, MysSQL_Connection);
+                int counrow = Int32.Parse(command.ExecuteScalar().ToString());//Получаем количество записей в таблице пользовательских переводов
+                command.Dispose();
+                MysSQL_Connection.Close();//Закрываем соединение с удалённой базой
+                if (counrow == 0)
+                {
+                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Соединение установлено! Новых переводов не обнаружено!"));
+                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.ForeColor = Color.Green));
+                    upload_from_server.Invoke((MethodInvoker)(() => upload_from_server.Enabled = false));
+                }
+                else
+                {
+                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Соединение установлено! С последнего обновления обнаружено " + counrow + " новых строк перевода!"));
+                    updatedownload.Invoke((MethodInvoker)(() => updatedownload.ForeColor = Color.Blue));
+                    upload_from_server.Invoke((MethodInvoker)(() => upload_from_server.Enabled = true));
+                }
+            }
+            catch (Exception eddd)//Отлавливаем ошибки
+            {
+                Logging(eddd.Message); //Записываем в лог ошибку                
+                updatedownload.Invoke((MethodInvoker)(() => updatedownload.Text = "Не удалось соединиться с удалённой базой!"));
+            }
+            LogBox.AppendText("Готово.\n");
+            Enabled = true;
+
+
         }
     }
 
