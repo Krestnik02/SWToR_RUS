@@ -662,40 +662,40 @@ namespace SWToR_RUS
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
                     Actions actions = new Actions(driver);
-                    actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")));
+                    actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
                     actions.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
 
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
                     Actions actionss = new Actions(driver);
-                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
                     actionss.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
                 }
                 if (driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang\"]/button/span/strong")).Text != "английского")
                 {
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
                     Actions actions = new Actions(driver);
-                    actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")));
+                    actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
                     actions.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/button[@dl-test=\"translator-lang-option-en\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
 
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
                     Actions actionss = new Actions(driver);
-                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
                     actionss.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
                 }
                 Thread.Sleep(500);
                 try

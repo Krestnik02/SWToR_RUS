@@ -21,6 +21,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Firefox;
+using OpenQA.Selenium.Support.UI;
+using OpenQA.Selenium.Interactions;
 
 namespace SWToR_RUS
 {
@@ -535,43 +538,87 @@ namespace SWToR_RUS
         }
         private void Db_convertor_Click(object sender, EventArgs e)
         {
-
-
-
-            string transl_a;
-            var baseAddress = "https://www.translate.ru/api/soap/getTranslation";
-            var http = (HttpWebRequest)WebRequest.Create(new Uri(baseAddress));
-            http.Accept = "application/json";
-            http.ContentType = "application/json";
-            http.Method = "POST";
-
-            string parsedContent = "{ dirCode:'en-ru', topic:'General', text:'" + WebUtility.HtmlEncode("HEllo") + "', eventName:'TranslatorClickTranslateActionUser',useAutoDetect:true,prmtXrvt:'KgY2G3lOc-5uguhvmWZNHGBO5zW9MU8xdEXVlx3I11E0X_tDvKwCj5pgzqYuOL8YmqLu_k6SBeQ1QKSV6OPzJ8ies-KXps1ZBFGk0zygkMzf5i_XZ9DKaAllc3bR7b1i'}";
-            UTF8Encoding encoding = new UTF8Encoding();
-            Byte[] bytessss = encoding.GetBytes(parsedContent);
-
-            Stream newStream = http.GetRequestStream();
-            newStream.Write(bytessss, 0, bytessss.Length);
-            newStream.Close();
-
-            var response = http.GetResponse();
-
-            var stream = response.GetResponseStream();
-            var sr = new StreamReader(stream);
-            var result = sr.ReadToEnd();
-            Console.WriteLine(result);
-            var details = JObject.Parse(result);
-            transl_a = details["d"]["result"].ToString();
-            Console.WriteLine(transl_a);
-            if (transl_a.Contains("<div class=\"sourceTxt\">"))
+            int Deepl_First_time = 1;
+            var outputElements = "";
+            if (Deepl_First_time == 1)
             {
-                int posi = transl_a.IndexOf("<div class=\"sourceTxt\">");
-                transl_a = transl_a.Substring(posi + 23);
-                posi = transl_a.IndexOf("</div>");
-                transl_a = transl_a.Substring(0, posi);
+                Deepl_First_time = 0;
+                FirefoxOptions options = new FirefoxOptions();
+                options.AddArguments("--headless");
+                driver = new FirefoxDriver(options)
+                {
+                    Url = "https://deepl.com/translator"
+                };
+
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
+                Thread.Sleep(1000);
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
+                Actions actions = new Actions(driver);
+                actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
+                actions.Perform();
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
+
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
+                Thread.Sleep(1000);
+                wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                Actions actionss = new Actions(driver);
+                actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                actionss.Perform();
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
             }
-            Console.WriteLine(transl_a);
+            if (driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang\"]/button/span/strong")).Text != "английского")
+            {
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
+                Thread.Sleep(1000);
+                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
+                Actions actions = new Actions(driver);
+                actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
+                actions.Perform();
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
 
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
+                Thread.Sleep(1000);
+                wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                Actions actionss = new Actions(driver);
+                actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                actionss.Perform();
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
+            }
+            Thread.Sleep(500);
+            try
+            {
+                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-clear-button\"]")).Click();
+            }
+            catch
+            {
 
+            }
+            try
+            {
+                var textInputElement = driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-input\"]"));
+                textInputElement.SendKeys("Hello");
+
+                var copyElement = driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-toolbar-copy\"]/button"));
+                while (driver.FindElement(By.XPath("//*[@class=\"lmt__text\"]/div[2]/div[3]/div[5]")).GetAttribute("class") == "lmt__mobile_share_container lmt--mobile-hidden lmt__mobile_share_container--inactive")
+                {
+                    Thread.Sleep(500);
+                }
+                outputElements = driver.FindElement(By.CssSelector("button[class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("innerHTML");
+            }
+            catch
+            {
+                Deepl_First_time = 1;
+                Thread.Sleep(10000);
+                driver.Close();
+                driver.Quit();
+            }
+            Console.WriteLine(outputElements);
+            driver.Close();
+            driver.Quit();
 
 
 
@@ -1258,13 +1305,23 @@ namespace SWToR_RUS
                     if (!Directory.Exists("user_translation\\done"))
                         Directory.CreateDirectory("user_translation\\done");
                     string[] tokens0 = filename.Split(new char[] { '\\' });
-                    if (File.Exists("user_translation\\" + tokens0.Last() + ".xml"))
+                    Console.WriteLine("user_translation\\done\\" + tokens0.Last() + ".xml");
+                    if (File.Exists("user_translation\\done\\" + tokens0.Last()))
                     {
-                        DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите перенести новіе переводы в него?", "Подтверждение", MessageBoxButtons.YesNo);
+                        DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите перенести новые переводы в него?", "Подтверждение", MessageBoxButtons.YesNo);
                         if (dialogResult == DialogResult.Yes)
                         {
-                            var lines = File.ReadAllLines("user_translation\\" + tokens0.Last());
-                            File.WriteAllLines("user_translation\\" + tokens0.Last(), lines.Take(lines.Length - 1).ToArray(), encoding: Encoding.UTF8);
+                            var lines = File.ReadAllLines("user_translation\\done\\" + tokens0.Last());
+                            var lines2 = File.ReadAllLines("user_translation\\" + tokens0.Last());
+                            File.WriteAllLines("user_translation\\done\\" + tokens0.Last(), lines.Take(lines.Length - 1).ToArray(), encoding: Encoding.UTF8);
+                            using (StreamWriter file_for_exam =
+                                                                            new StreamWriter("user_translation\\done\\" + tokens0.Last(), true, encoding: Encoding.UTF8))
+                            {
+                                for (int jk = 1; jk <= lines2.Length-2; jk++)
+                                    file_for_exam.WriteLine(lines2[jk]);
+                                file_for_exam.WriteLine("</rezult>");
+                            }
+                            File.Delete("user_translation\\" + tokens0.Last());
                         }
                         else
                         {
@@ -1272,8 +1329,10 @@ namespace SWToR_RUS
                             File.Move(filename, "user_translation\\done\\" + tokens1[0] + "1.xml");
                         }
                     }
-                        
-
+                    else
+                    {
+                        File.Move(filename, "user_translation\\done\\" + tokens0.Last());
+                    }
                 }
                 conn.Close();
                 ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));

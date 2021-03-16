@@ -586,7 +586,7 @@ namespace SWToR_RUS
             // 
             // db_convertor
             // 
-            this.db_convertor.Location = new System.Drawing.Point(41, 259);
+            this.db_convertor.Location = new System.Drawing.Point(103, 262);
             this.db_convertor.Name = "db_convertor";
             this.db_convertor.Size = new System.Drawing.Size(75, 23);
             this.db_convertor.TabIndex = 12;
