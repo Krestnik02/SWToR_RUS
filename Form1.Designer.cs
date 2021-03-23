@@ -100,6 +100,7 @@ namespace SWToR_RUS
             this.discord_link = new System.Windows.Forms.PictureBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.Updater_check = new System.Windows.Forms.PictureBox();
+            this.ban_list = new System.Windows.Forms.PictureBox();
             this.groupBox1.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -110,6 +111,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ban_list)).BeginInit();
             this.SuspendLayout();
             // 
             // Install_btn
@@ -623,6 +625,7 @@ namespace SWToR_RUS
             this.pictureBox2.Size = new System.Drawing.Size(149, 152);
             this.pictureBox2.TabIndex = 16;
             this.pictureBox2.TabStop = false;
+            this.toolTip1.SetToolTip(this.pictureBox2, "Поддержать автора программы");
             this.pictureBox2.Click += new System.EventHandler(this.PictureBox2_Click);
             // 
             // label1
@@ -663,12 +666,12 @@ namespace SWToR_RUS
             // 
             // vk_link
             // 
-            this.vk_link.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("vk_link.BackgroundImage")));
+            this.vk_link.BackgroundImage = global::SWToR_RUS.Properties.Resources.vk;
             this.vk_link.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.vk_link.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.vk_link.Location = new System.Drawing.Point(42, 199);
+            this.vk_link.Location = new System.Drawing.Point(77, 201);
             this.vk_link.Name = "vk_link";
-            this.vk_link.Size = new System.Drawing.Size(29, 35);
+            this.vk_link.Size = new System.Drawing.Size(31, 33);
             this.vk_link.TabIndex = 23;
             this.vk_link.TabStop = false;
             this.toolTip1.SetToolTip(this.vk_link, "Оффициальная группа ВК");
@@ -679,9 +682,9 @@ namespace SWToR_RUS
             this.discord_link.BackgroundImage = global::SWToR_RUS.Properties.Resources.discord;
             this.discord_link.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.discord_link.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.discord_link.Location = new System.Drawing.Point(77, 201);
+            this.discord_link.Location = new System.Drawing.Point(40, 201);
             this.discord_link.Name = "discord_link";
-            this.discord_link.Size = new System.Drawing.Size(39, 33);
+            this.discord_link.Size = new System.Drawing.Size(31, 33);
             this.discord_link.TabIndex = 24;
             this.discord_link.TabStop = false;
             this.toolTip1.SetToolTip(this.discord_link, "Офиициальный Discord канал");
@@ -689,16 +692,29 @@ namespace SWToR_RUS
             // 
             // Updater_check
             // 
-            this.Updater_check.BackgroundImage = global::SWToR_RUS.Properties.Resources.update;
+            this.Updater_check.BackgroundImage = global::SWToR_RUS.Properties.Resources.upload;
             this.Updater_check.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.Updater_check.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.Updater_check.Location = new System.Drawing.Point(55, 239);
+            this.Updater_check.Location = new System.Drawing.Point(77, 240);
             this.Updater_check.Name = "Updater_check";
-            this.Updater_check.Size = new System.Drawing.Size(42, 43);
+            this.Updater_check.Size = new System.Drawing.Size(31, 33);
             this.Updater_check.TabIndex = 25;
             this.Updater_check.TabStop = false;
             this.toolTip1.SetToolTip(this.Updater_check, "Проверить наличие обновлений");
             this.Updater_check.Click += new System.EventHandler(this.PictureBox1_Click);
+            // 
+            // ban_list
+            // 
+            this.ban_list.BackgroundImage = global::SWToR_RUS.Properties.Resources.block;
+            this.ban_list.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.ban_list.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.ban_list.Location = new System.Drawing.Point(40, 240);
+            this.ban_list.Name = "ban_list";
+            this.ban_list.Size = new System.Drawing.Size(31, 33);
+            this.ban_list.TabIndex = 27;
+            this.ban_list.TabStop = false;
+            this.toolTip1.SetToolTip(this.ban_list, "Заблокировать авторов перевода");
+            this.ban_list.Click += new System.EventHandler(this.ban_list_Click);
             // 
             // Form1
             // 
@@ -706,6 +722,7 @@ namespace SWToR_RUS
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(854, 361);
+            this.Controls.Add(this.ban_list);
             this.Controls.Add(this.Updater_check);
             this.Controls.Add(this.discord_link);
             this.Controls.Add(this.vk_link);
@@ -749,6 +766,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ban_list)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -811,6 +829,7 @@ namespace SWToR_RUS
         private System.Windows.Forms.CheckBox Dis_non_dialoge;
         private System.Windows.Forms.Button Ins_font;
         private System.Windows.Forms.PictureBox Updater_check;
+        private System.Windows.Forms.PictureBox ban_list;
     }
 }
 

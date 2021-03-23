@@ -923,5 +923,10 @@ namespace SWToR_RUS
             Form ifrm = Application.OpenForms[0];
             ifrm.Show();
         }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

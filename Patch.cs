@@ -8,6 +8,7 @@ using System.Net;
 using System.Data.SQLite;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
+using System.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading;
@@ -60,6 +61,7 @@ namespace SWToR_RUS
             string a2 = "0";
             string dis_items = "0";
             string non_dialoge="0";
+            string banlist = "0";
             int z = 290505;
             int f = 465311;
             List<uint> list = new List<uint>();
@@ -71,6 +73,18 @@ namespace SWToR_RUS
                 dis_items = ConfigurationManager.AppSettings["items"];
             if (ConfigurationManager.AppSettings["non_dialoge"] != null)
                 non_dialoge = ConfigurationManager.AppSettings["non_dialoge"];
+            if (ConfigurationManager.AppSettings["banlist"] != null)
+            {
+                banlist = ConfigurationManager.AppSettings["banlist"];
+                List<string> current_list_bans = banlist.Split(',').ToList();
+
+                for (int i = 0; i < current_list_bans.Count; i++)
+                {
+                    current_list_bans[i] = "'" + current_list_bans[i] + "'";
+                }
+
+                banlist = String.Join(", ", current_list_bans.ToArray());
+            }
             string text_en;
             string text_ru_m;
             string text_ru_w;
@@ -85,7 +99,17 @@ namespace SWToR_RUS
             sql_insert = "SELECT hash,fileinfo,key_unic,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE ";
             if (ConfigurationManager.AppSettings["google"] != "1")
             {
-                if(a2 == "2" && dis_items == "1")
+                if(a2 == "2" && dis_items == "1" && banlist != "0")
+                    sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl') AND ((translator_m) not in ("+ banlist + "))";
+                else if (a2 == "2" && banlist != "0")
+                    sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl') AND ((translator_m) not in (" + banlist + "))";
+                else if (dis_items == "1" && banlist != "0")
+                    sql_insert += "fileinfo!='itm.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl') AND ((translator_m) not in (" + banlist + "))";
+                else if (non_dialoge == "1" && banlist != "0")
+                    sql_insert += "fileinfo like 'cnv%' AND (translator_m!='Deepl' OR translator_w!='Deepl') AND ((translator_m) not in (" + banlist + "))";
+                else if (banlist != "0")
+                    sql_insert += "(translator_m) not in (" + banlist + ")";
+                else if (a2 == "2" && dis_items == "1")
                     sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
                 else if (a2 == "2")
                     sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND (translator_m!='Deepl' OR translator_w!='Deepl')";
@@ -98,7 +122,15 @@ namespace SWToR_RUS
             }
             else
             {
-                if (a2 == "2" && dis_items == "1")
+                if (a2 == "2" && dis_items == "1" && banlist != "0")
+                    sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND ((translator_m) not in (" + banlist + "))'";
+                else if (a2 == "2" && banlist != "0")
+                    sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb' AND ((translator_m) not in (" + banlist + "))'";
+                else if (dis_items == "1" && banlist != "0")
+                    sql_insert += "fileinfo!='itm.stb' AND ((translator_m) not in (" + banlist + "))'";
+                else if (non_dialoge == "1" && banlist != "0")
+                    sql_insert += "fileinfo like 'cnv%' AND ((translator_m) not in (" + banlist + "))'";
+                else if(a2 == "2" && dis_items == "1")
                     sql_insert += "fileinfo!='itm.stb' AND fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb'";
                 else if (a2 == "2")
                     sql_insert += "fileinfo!='abl.stb' AND fileinfo!='tal.stb' AND fileinfo!='gui/amplifiers.stb' AND fileinfo!='gui/abl/player/skill_trees.stb'";
@@ -106,6 +138,8 @@ namespace SWToR_RUS
                     sql_insert += "fileinfo!='itm.stb'";
                 else if (non_dialoge == "1")
                     sql_insert += "fileinfo like 'cnv%'";
+                else if (banlist != "0")
+                    sql_insert += "translator_m not in (" + banlist + ")";
                 else
                     sql_insert = "SELECT hash,fileinfo,key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated";
             }
