@@ -1873,6 +1873,13 @@ namespace SWToR_RUS
         {
             LogBox.AppendText("Производится запуск русификатора...подождите...\n");
             Enabled = false;
+            LogBox.AppendText("Проверяем бан-лист...подождите...\n");
+
+            if(Config.AppSettings.Settings["banlist"].Value.ToString() != "0" && Config.AppSettings.Settings["banlist"].Value.ToString() != "")
+                LogBox.AppendText("Заблокирован перевод: "+Config.AppSettings.Settings["banlist"].Value + Environment.NewLine);
+            else
+                LogBox.AppendText("Бан-лист чист...\n");
+
             await Task.Run(() => Loading_info());
             Enabled = true;
         }
@@ -2336,6 +2343,12 @@ namespace SWToR_RUS
             Enabled = true;
 
 
+        }
+
+        private void ban_list_Click(object sender, EventArgs e)
+        {
+            Form4 form4 = new Form4();
+            form4.Show();
         }
     }
 

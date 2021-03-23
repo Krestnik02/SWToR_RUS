@@ -120,6 +120,12 @@
     <Compile Include="Form3.Designer.cs">
       <DependentUpon>Form3.cs</DependentUpon>
     </Compile>
+    <Compile Include="Form4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form4.Designer.cs">
+      <DependentUpon>Form4.cs</DependentUpon>
+    </Compile>
     <Compile Include="ILog.cs" />
     <Compile Include="Patch.cs" />
     <Compile Include="Form1.cs">
@@ -138,6 +144,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form3.resx">
       <DependentUpon>Form3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form4.resx">
+      <DependentUpon>Form4.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -169,9 +178,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon.ico" />
-    <None Include="Resources\update.bmp" />
-    <None Include="Resources\discord.bmp" />
-    <None Include="Resources\vk.bmp" />
+    <Content Include="Resources\block.png" />
+    <Content Include="Resources\discord.png" />
+    <Content Include="Resources\upload.png" />
+    <Content Include="Resources\vk.png" />
     <None Include="Resources\swtor1.jpg" />
     <None Include="Resources\swtor.jpg" />
   </ItemGroup>
