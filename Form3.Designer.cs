@@ -113,6 +113,7 @@ namespace SWToR_RUS
             this.Translate_Restrict.TabIndex = 41;
             this.Translate_Restrict.Text = "Запретить редактирование моих переводов";
             this.Translate_Restrict.UseVisualStyleBackColor = true;
+            this.Translate_Restrict.Visible = false;
             // 
             // Form3
             // 

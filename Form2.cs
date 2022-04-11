@@ -276,11 +276,11 @@ namespace SWToR_RUS
             string sql_insert = "";
             int num_edited_rows = 0;
             string change_other_strings = "no";
-            DialogResult dialogResult1 = MessageBox.Show("Заменять уже отредактированные строки?", "Подтверждение", MessageBoxButtons.YesNo);
+            /*DialogResult dialogResult1 = MessageBox.Show("Заменять уже отредактированные строки?", "Подтверждение", MessageBoxButtons.YesNo);
             if (dialogResult1 == DialogResult.Yes)
             {
                 change_other_strings = "yes";
-            }
+            }*/
             using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
             {
                 sqlite_conn.Open();
@@ -303,7 +303,7 @@ namespace SWToR_RUS
                             {
                                 if (change_other_strings == "no")
                                 {
-                                    if (row.Cells["key"].Value.ToString() == s["key_unic"].ToString() || s["translator_m"].ToString() == "Deepl")
+                                    if (row.Cells["key"].Value.ToString() == s["key_unic"].ToString())
                                     {
                                         if (!list_keys.Contains(s["key_unic"].ToString()))
                                             list_keys.Add(s["key_unic"].ToString());
@@ -524,9 +524,9 @@ namespace SWToR_RUS
                             }
 
                             if (searchbox.Text != "")
-                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE " + sql_insert_part2 + " GROUP BY text_en ORDER by ID" + sql_insert_part3;
+                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE " + sql_insert_part2 + " ORDER by ID" + sql_insert_part3;
                             else
-                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2 + " GROUP BY text_en ORDER by ID" + sql_insert_part3;
+                                sql_insert = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM Translated WHERE fileinfo='" + file_to_trans.Text + "'" + sql_insert_part2 + " ORDER by ID" + sql_insert_part3;
                             sqlite_cmd.CommandText = sql_insert;
                             SQLiteDataReader r = sqlite_cmd.ExecuteReader();
                             loading_text.Parent = progressBar_text;
@@ -690,9 +690,9 @@ namespace SWToR_RUS
                         }
                         r.Close();
                         if (checkBox1.Checked == true)
-                            sql_select = "SELECT key_unic,hash FROM Translated WHERE fileinfo='" + select_file + "' AND ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')) GROUP BY text_en ORDER by id";
+                            sql_select = "SELECT key_unic,hash FROM Translated WHERE fileinfo='" + select_file + "' AND ((translator_m='Deepl' OR translator_w='Deepl') OR (translator_m='" + new_author.Text + "' OR translator_w='" + new_author.Text + "')) ORDER by id";
                         else
-                            sql_select = "SELECT key_unic,hash FROM Translated WHERE fileinfo='" + select_file + "' GROUP BY text_en ORDER by id";
+                            sql_select = "SELECT key_unic,hash FROM Translated WHERE fileinfo='" + select_file + "' ORDER by id";
                         sqlite_cmd.CommandText = sql_select;
                         SQLiteDataReader s = sqlite_cmd.ExecuteReader();                        
                         while (s.Read())

@@ -100,6 +100,8 @@ namespace SWToR_RUS
             this.discord_link = new System.Windows.Forms.PictureBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.Updater_check = new System.Windows.Forms.PictureBox();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -110,6 +112,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // Install_btn
@@ -201,11 +204,11 @@ namespace SWToR_RUS
             this.auth_translate.AutoSize = true;
             this.auth_translate.Location = new System.Drawing.Point(6, 63);
             this.auth_translate.Name = "auth_translate";
-            this.auth_translate.Size = new System.Drawing.Size(187, 30);
+            this.auth_translate.Size = new System.Drawing.Size(189, 30);
             this.auth_translate.TabIndex = 22;
-            this.auth_translate.Text = "Не изменять заблокированные\nпереводы";
-            this.toolTip1.SetToolTip(this.auth_translate, "При загрузке новых строк перевода с сервера\r\nне изменяются строки автор которых з" +
-        "апретил\r\nих редактирование.");
+            this.auth_translate.Text = "Загружать только проверенные\r\nпереводы";
+            this.toolTip1.SetToolTip(this.auth_translate, "При загрузке новых строк перевода с сервера\r\nне загружаются строки авторов, котор" +
+        "ые не\r\nпрошли верификацию в Discord\'е");
             this.auth_translate.UseVisualStyleBackColor = true;
             this.auth_translate.CheckedChanged += new System.EventHandler(this.Auth_translate_CheckedChanged);
             // 
@@ -618,7 +621,7 @@ namespace SWToR_RUS
             // 
             this.pictureBox2.BackgroundImage = global::SWToR_RUS.Properties.Resources.swtor;
             this.pictureBox2.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.pictureBox2.Location = new System.Drawing.Point(3, 46);
+            this.pictureBox2.Location = new System.Drawing.Point(3, 33);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(149, 152);
             this.pictureBox2.TabIndex = 16;
@@ -640,7 +643,7 @@ namespace SWToR_RUS
             // Updater
             // 
             this.Updater.AutoSize = true;
-            this.Updater.Location = new System.Drawing.Point(617, 334);
+            this.Updater.Location = new System.Drawing.Point(611, 334);
             this.Updater.Name = "Updater";
             this.Updater.Size = new System.Drawing.Size(117, 13);
             this.Updater.TabIndex = 18;
@@ -666,7 +669,7 @@ namespace SWToR_RUS
             this.vk_link.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("vk_link.BackgroundImage")));
             this.vk_link.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.vk_link.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.vk_link.Location = new System.Drawing.Point(42, 199);
+            this.vk_link.Location = new System.Drawing.Point(42, 195);
             this.vk_link.Name = "vk_link";
             this.vk_link.Size = new System.Drawing.Size(29, 35);
             this.vk_link.TabIndex = 23;
@@ -679,7 +682,7 @@ namespace SWToR_RUS
             this.discord_link.BackgroundImage = global::SWToR_RUS.Properties.Resources.discord;
             this.discord_link.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.discord_link.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.discord_link.Location = new System.Drawing.Point(77, 201);
+            this.discord_link.Location = new System.Drawing.Point(77, 196);
             this.discord_link.Name = "discord_link";
             this.discord_link.Size = new System.Drawing.Size(39, 33);
             this.discord_link.TabIndex = 24;
@@ -692,7 +695,7 @@ namespace SWToR_RUS
             this.Updater_check.BackgroundImage = global::SWToR_RUS.Properties.Resources.update;
             this.Updater_check.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             this.Updater_check.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.Updater_check.Location = new System.Drawing.Point(55, 239);
+            this.Updater_check.Location = new System.Drawing.Point(55, 235);
             this.Updater_check.Name = "Updater_check";
             this.Updater_check.Size = new System.Drawing.Size(42, 43);
             this.Updater_check.TabIndex = 25;
@@ -700,12 +703,38 @@ namespace SWToR_RUS
             this.toolTip1.SetToolTip(this.Updater_check, "Проверить наличие обновлений");
             this.Updater_check.Click += new System.EventHandler(this.PictureBox1_Click);
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackgroundImage = global::SWToR_RUS.Properties.Resources.donate;
+            this.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.pictureBox1.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pictureBox1.Location = new System.Drawing.Point(3, 324);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(104, 35);
+            this.pictureBox1.TabIndex = 26;
+            this.pictureBox1.TabStop = false;
+            this.toolTip1.SetToolTip(this.pictureBox1, "Поддержать разработчика");
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click_1);
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(158, 329);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 27;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Visible = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
             this.ClientSize = new System.Drawing.Size(854, 361);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.Updater_check);
             this.Controls.Add(this.discord_link);
             this.Controls.Add(this.vk_link);
@@ -749,6 +778,7 @@ namespace SWToR_RUS
             ((System.ComponentModel.ISupportInitialize)(this.vk_link)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.discord_link)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Updater_check)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -811,6 +841,8 @@ namespace SWToR_RUS
         private System.Windows.Forms.CheckBox Dis_non_dialoge;
         private System.Windows.Forms.Button Ins_font;
         private System.Windows.Forms.PictureBox Updater_check;
+        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button button1;
     }
 }
 

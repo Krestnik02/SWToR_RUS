@@ -24,6 +24,8 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Interactions;
+using ICSharpCode.SharpZipLib.Zip.Compression;
+using System.IO.Compression;
 
 namespace SWToR_RUS
 {
@@ -538,531 +540,201 @@ namespace SWToR_RUS
         }
         private void Db_convertor_Click(object sender, EventArgs e)
         {
-            int Deepl_First_time = 1;
-            var outputElements = "";
-            if (Deepl_First_time == 1)
+            cou = 0;
+            FileStream fileStream = new FileStream("swtor_main_gfx_assets_1.tor", FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
+            uint num = binaryReader.ReadUInt32();
+            binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
+            filescount = binaryReader.ReadUInt32();
+            endtable = 0;
+            endtable = EndOff(fileStream);
+            int num2 = (int)Math.Ceiling((double)filescount / 1000.0);
+            binaryReader.BaseStream.Seek(num, SeekOrigin.Begin);
+            long position = binaryReader.BaseStream.Position;
+            while (num2 > 0)
             {
-                Deepl_First_time = 0;
-                FirefoxOptions options = new FirefoxOptions();
-                options.AddArguments("--headless");
-                driver = new FirefoxDriver(options)
+                binaryReader.BaseStream.Position = position;
+                uint num3 = binaryReader.ReadUInt32();
+                if (num3 != 1000)
+                    break;
+                if (binaryReader.ReadUInt32() == 0)
+                    lastoffes = (int)binaryReader.BaseStream.Position - 8;
+                binaryReader.ReadUInt32();
+                position = binaryReader.BaseStream.Position;
+                for (int i = 0; i < num3; i++)
                 {
-                    Url = "https://deepl.com/translator"
-                };
-
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
-                Thread.Sleep(1000);
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
-                Actions actions = new Actions(driver);
-                actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
-                actions.Perform();
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
-
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
-                Thread.Sleep(1000);
-                wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
-                Actions actionss = new Actions(driver);
-                actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
-                actionss.Perform();
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
-            }
-            if (driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang\"]/button/span/strong")).Text != "английского")
-            {
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-btn\"]")).Click();
-                Thread.Sleep(1000);
-                var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Count > 0);
-                Actions actions = new Actions(driver);
-                actions.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")));
-                actions.Perform();
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-en\"]")).Click();
-
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
-                Thread.Sleep(1000);
-                wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
-                Actions actionss = new Actions(driver);
-                actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")));
-                actionss.Perform();
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/button/div[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
-            }
-            Thread.Sleep(500);
-            try
-            {
-                driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-clear-button\"]")).Click();
-            }
-            catch
-            {
-
-            }
-            try
-            {
-                var textInputElement = driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-input\"]"));
-                textInputElement.SendKeys("Hello");
-
-                var copyElement = driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-toolbar-copy\"]/button"));
-                while (driver.FindElement(By.XPath("//*[@class=\"lmt__text\"]/div[2]/div[3]/div[5]")).GetAttribute("class") == "lmt__mobile_share_container lmt--mobile-hidden lmt__mobile_share_container--inactive")
-                {
-                    Thread.Sleep(500);
-                }
-                outputElements = driver.FindElement(By.CssSelector("button[class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("innerHTML");
-            }
-            catch
-            {
-                Deepl_First_time = 1;
-                Thread.Sleep(10000);
-                driver.Close();
-                driver.Quit();
-            }
-            Console.WriteLine(outputElements);
-            driver.Close();
-            driver.Quit();
-
-
-
-
-
-
-
-            /*
-            string line;
-            using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
-            {
-                sqlite_conn.Open();
-                using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sqlite_conn))
-                {
-                    var lineCount = File.ReadLines("db\\log.txt").Count();
-                    int iiiisd = 1;
-                    StreamReader file = new StreamReader("db\\log.txt");
-                    using (SQLiteTransaction transaction = sqlite_conn.BeginTransaction())
-                    {
-                        while ((line = file.ReadLine()) != null)
-                        {
-                            sqlite_cmd.CommandText = line;
-                            sqlite_cmd.ExecuteNonQuery();
-                            string xml_text = iiiisd.ToString();
-                            using (StreamWriter file_for_exam = new StreamWriter("db\\loging.txt", true))
-                            {
-                                file_for_exam.WriteLine(xml_text);
-                            }
-                            iiiisd++;
-                        }
-                        transaction.Commit();
-                    }
-                }
-                sqlite_conn.Close();
-            }
-
-
-
-                    //-------------------------гугл переводчик-------------------- -
-                    using (SQLiteConnection sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; "))
-                    {
-                        sqlite_conn.Open();
-                        using (SQLiteCommand sqlite_cmd = new SQLiteCommand(sqlite_conn))
-                        {
-                            string line;
-                            string line1;
-                            string sql_select;
-                            string sql_insert;
-                            string text_who_talk = "";
-                            string text_who_talk_old = "";
-                            string text_to_who_talk = "";
-                            string text_talking = "";
-                            string options_answers = "";
-                            string talk_player = "";
-                            string talk_player_to_whom = "";
-                            string text_answer = "";
-                            string key_text_who_talk = "";
-                            string key_text_talking = "";
-                            string key_options_answers = "";
-                            string key_text_answer = "";
-                            string quest_name = "";
-                            string sURL = "";
-                            string sURL1 = "";
-                            string fileinfo = "";
-                            int js = 1;
-                            int count_links = 1;
-                            WebRequest wrGETURL;
-                            for (int i=136;i<=139;i++)
-                            {
-                                sURL1 = "https://torcommunity.com/database/search/mission/?page=" + i + "&";
-                                wrGETURL = WebRequest.Create(sURL1);
-                                Stream objStream1;
-                                objStream1 = wrGETURL.GetResponse().GetResponseStream();
-                                StreamReader objReader1 = new StreamReader(objStream1, Encoding.Default);
-                                while ((line1 = objReader1.ReadLine()) != null)
-                                {
-
-                                    if (line1.IndexOf("<div style='display:inline;'><a href='") > 0)
-                                    {
-                                        if (count_links >= 13)
-                                        {
-                                            sURL = line1.Substring(line1.IndexOf("<div style='display:inline;'><a href='") + 38);
-                                            sURL = "https://torcommunity.com" + sURL.Substring(0, sURL.IndexOf("'") - 1);
-                                            wrGETURL = WebRequest.Create(sURL);
-                                            Stream objStream;
-                                            objStream = wrGETURL.GetResponse().GetResponseStream();
-                                            StreamReader objReader = new StreamReader(objStream, Encoding.Default);
-
-                                            while ((line = objReader.ReadLine()) != null)
-                                            {
-                                                text_talking = "";
-                                                talk_player = "";
-                                                talk_player_to_whom = "";
-                                                options_answers = "";
-                                                text_answer = "";
-                                                key_text_talking = "";
-                                                key_options_answers = "";
-                                                key_text_answer = "";
-                                                if (line.IndexOf("<h1 class='title'>") > 0)
-                                                {
-                                                    quest_name = line.Substring(line.IndexOf("<h1 class='title'>") + 18);
-                                                    quest_name = quest_name.Substring(0, quest_name.IndexOf("</h1>"));
-                                                }
-                                                if (line.IndexOf(" style='display: inline-block;'>") > 0 && line.IndexOf("<span class='torctip") > 0)
-                                                {
-                                                    text_who_talk = line.Substring(line.IndexOf(" style='display: inline-block;'>") + 32);
-                                                    text_who_talk = text_who_talk.Substring(0, text_who_talk.IndexOf("<span class"));
-                                                    if (line.IndexOf("<span class='nText'>") > 0)
-                                                    {
-                                                        text_talking = line.Substring(line.IndexOf("<span class='nText'>") + 20);
-                                                        if (text_talking.IndexOf("</span>") > 0)
-                                                            text_talking = text_talking.Substring(0, text_talking.IndexOf("</span>"));
-                                                        if (js == 1)
-                                                        {
-                                                            sql_select = "SELECT key_unic,fileinfo FROM Translated WHERE text_en ='" + WebUtility.HtmlEncode(text_talking) + "'";
-                                                            sqlite_cmd.CommandText = sql_select;
-                                                            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-                                                            while (r.Read())
-                                                            {
-                                                                fileinfo = r["fileinfo"].ToString();
-                                                                key_text_talking = r["key_unic"].ToString();
-                                                            }
-                                                            r.Close();
-                                                        }
-                                                        else
-                                                        {
-                                                            sql_select = "SELECT key_unic FROM Translated WHERE text_en ='" + WebUtility.HtmlEncode(text_talking) + "' AND fileinfo='" + fileinfo + "'";
-                                                            sqlite_cmd.CommandText = sql_select;
-                                                            key_text_talking = Convert.ToString(sqlite_cmd.ExecuteScalar());
-                                                            if (key_text_talking == "")
-                                                            {
-                                                                sql_select = "SELECT key_unic FROM Translated WHERE text_en ='" + WebUtility.HtmlEncode(text_talking) + "'";
-                                                                sqlite_cmd.CommandText = sql_select;
-                                                                key_text_talking = Convert.ToString(sqlite_cmd.ExecuteScalar());
-                                                            }
-                                                        }
-
-                                                    }
-                                                    if (line.IndexOf("<span class='nOption'>") > 0)
-                                                    {
-                                                        text_to_who_talk = "Игрок";
-                                                        talk_player = "Игрок";
-                                                        talk_player_to_whom = text_who_talk;
-                                                        options_answers = line.Substring(line.IndexOf("<span class='nOption'>") + 22);
-                                                        options_answers = options_answers.Substring(0, options_answers.IndexOf("</span>"));
-                                                        text_answer = line.Substring(line.IndexOf("Player</span> - <span class='nText'>") + 36);
-                                                        if (text_answer.IndexOf("</span>") > 0)
-                                                            text_answer = text_answer.Substring(0, text_answer.IndexOf("</span>"));
-                                                    }
-                                                    if (text_who_talk_old != text_who_talk)
-                                                    {
-                                                        text_who_talk_old = text_who_talk;
-                                                    }
-
-
-                                                    if (options_answers != "")
-                                                    {
-                                                        sql_select = "SELECT key_unic FROM Translated WHERE text_en ='" + WebUtility.HtmlEncode(options_answers) + "'";
-                                                        sqlite_cmd.CommandText = sql_select;
-                                                        key_options_answers = Convert.ToString(sqlite_cmd.ExecuteScalar());
-                                                        sql_select = "SELECT key_unic FROM Translated WHERE text_en ='" + WebUtility.HtmlEncode(text_answer) + "'";
-                                                        sqlite_cmd.CommandText = sql_select;
-                                                        key_text_answer = Convert.ToString(sqlite_cmd.ExecuteScalar());
-
-                                                        sql_insert = "INSERT INTO Conversations(quest_name,text_en_id,who_talk,to_whom_talk) VALUES ('" + WebUtility.HtmlEncode(quest_name) + "','" + key_text_talking + "','" + WebUtility.HtmlEncode(text_who_talk) + "','" + WebUtility.HtmlEncode(text_to_who_talk) + "');";
-                                                        using (StreamWriter file_for_exam =
-                                             new StreamWriter("user_translation\\convers.xml", true, encoding: Encoding.UTF8))
-                                                        {
-                                                            file_for_exam.WriteLine(sql_insert);
-                                                        }
-                                                        //sqlite_cmd.CommandText = sql_insert;
-                                                        //sqlite_cmd.ExecuteNonQuery();
-
-                                                        sql_insert = "INSERT INTO Conversations(quest_name,text_en_id,who_talk,to_whom_talk) VALUES ('" + WebUtility.HtmlEncode(quest_name) + "','" + key_options_answers + "','" + WebUtility.HtmlEncode(talk_player) + "','" + WebUtility.HtmlEncode(text_who_talk) + "');";
-                                                        using (StreamWriter file_for_exam =
-                                             new StreamWriter("user_translation\\convers.xml", true, encoding: Encoding.UTF8))
-                                                        {
-                                                            file_for_exam.WriteLine(sql_insert);
-                                                        }
-                                                        //sqlite_cmd.CommandText = sql_insert;
-                                                        //sqlite_cmd.ExecuteNonQuery();
-
-                                                        sql_insert = "INSERT INTO Conversations(quest_name,text_en_id,who_talk,to_whom_talk) VALUES ('" + WebUtility.HtmlEncode(quest_name) + "','" + key_text_answer + "','" + WebUtility.HtmlEncode(talk_player) + "','" + WebUtility.HtmlEncode(text_who_talk) + "');";
-                                                        using (StreamWriter file_for_exam =
-                                             new StreamWriter("user_translation\\convers.xml", true, encoding: Encoding.UTF8))
-                                                        {
-                                                            file_for_exam.WriteLine(sql_insert);
-                                                        }
-
-
-                                                        //sqlite_cmd.CommandText = sql_insert;
-                                                        //sqlite_cmd.ExecuteNonQuery();
-                                                        js++;
-                                                    }
-                                                    else
-                                                    {
-                                                        if (text_talking != "")
-                                                        {
-                                                            sql_insert = "INSERT INTO Conversations(quest_name,text_en_id,who_talk) VALUES ('" + WebUtility.HtmlEncode(quest_name) + "','" + key_text_talking + "','" + WebUtility.HtmlEncode(text_who_talk) + "');";
-
-                                                            using (StreamWriter file_for_exam =
-                                             new StreamWriter("user_translation\\convers.xml", true, encoding: Encoding.UTF8))
-                                                            {
-                                                                file_for_exam.WriteLine(sql_insert);
-                                                            }
-
-                                                            //sqlite_cmd.CommandText = sql_insert;
-                                                            //sqlite_cmd.ExecuteNonQuery();
-                                                            js++;
-                                                        }
-                                                    }
-                                                }
-                                            }
-
-                                        }
-                                        count_links++;
-                                    }
-
-
-
-
-                                }
-                            }
-                        }
-                        sqlite_conn.Close();
-                    }
-                    */
-
-
-            //string responseFromServer = objReader.ReadToEnd();
-            //string start = responseFromServer.Substring(responseFromServer.IndexOf("class=\"t0\"") + 11);
-
-            //string translated = start.Substring(0, start.IndexOf("</div>"));
-            //--------------------------------------------------------------------
-
-
-
-            /*
-            Dictionary<string, string> dictionary_transl = new Dictionary<string, string>();
-            SQLiteConnection sqlite_conn;
-            sqlite_conn = new SQLiteConnection("Data Source=db\\translate.db3; Version = 3; New = True; Compress = True; ");
-            sqlite_conn.Open();
-            SQLiteCommand sqlite_cmd;
-            sqlite_cmd = sqlite_conn.CreateCommand();
-            string sql_insert = "SELECT text_en,text_ru_m FROM Translated WHERE translator_m!='3'";
-            sqlite_cmd.CommandText = sql_insert;
-            SQLiteDataReader r = sqlite_cmd.ExecuteReader();
-            while (r.Read())
-            {
-                if (!dictionary_transl.ContainsKey(r["text_en"].ToString()))
-                    dictionary_transl.Add(r["text_en"].ToString(), r["text_ru_m"].ToString());
-            }
-            r.Close();
-
-
-
-
-
-            string xml_text = "";
-            sql_insert = "SELECT * FROM Translated WHERE translator_m=='3'";
-            sqlite_cmd.CommandText = sql_insert;
-            SQLiteDataReader s = sqlite_cmd.ExecuteReader();
-            int isd = 1;
-            while (s.Read())
-            {
-
-                if (dictionary_transl.ContainsKey(s["text_en"].ToString()))
-                {
-
-                            xml_text = "<key>" + s["key_unic"].ToString() + "</key><text_en>" + WebUtility.HtmlEncode(s["text_en"].ToString()) + "</text_en><text_ru_m transl=\"1\">" + WebUtility.HtmlEncode(dictionary_transl[s["text_en"].ToString()]) + "</text_ru_m><text_ru_w transl=\"\"></text_ru_w>";
-
-
-
-                        //Console.WriteLine(dictionary_transl[s["text_en"].ToString()]);
-                        using (StreamWriter file_for_exam =
-                                 new StreamWriter("user_translation\\left.xml", true, encoding: Encoding.UTF8))
-                        {
-                            file_for_exam.WriteLine(xml_text);
-                        }
-                        //Console.WriteLine(s["text_ru_m"].ToString()); 
-                        isd++;
-
-
-
-                         }
-            }
-            Console.WriteLine(isd);
-            s.Close();
-            sqlite_conn.Close();*/
-            /* 
-
-            //-------------------------гугл переводчик-------------------- -
-                  string sURL = "https://translate.google.com/m?hl=ru&sl=en&tl=ru&ie=UTF-8&prev=_m&q=" + text;
-            WebRequest wrGETURL;
-            wrGETURL = WebRequest.Create(sURL);
-            Stream objStream;
-            objStream = wrGETURL.GetResponse().GetResponseStream();
-            StreamReader objReader = new StreamReader(objStream, Encoding.Default);
-            string responseFromServer = objReader.ReadToEnd();
-            string start = responseFromServer.Substring(responseFromServer.IndexOf("class=\"t0\"") + 11);
-
-            string translated = start.Substring(0, start.IndexOf("</div>"));
-            //--------------------------------------------------------------------  
-
-             // stb JKC чтение------------------------------ 
-             * Dictionary<ulong, string> dictionary_xml_files = new Dictionary<ulong, string>();
-             //Dictionary<ulong, string> dictionary_xml_m = new Dictionary<ulong, string>();
-             //Directory.GetFiles("stb\\", "*", SearchOption.AllDirectories)
-             string[] allfiles = Directory.GetFiles("stb\\", "*", SearchOption.AllDirectories);
-             int jks = 1;
-             int asd = 0;
-             foreach (string filename in allfiles)
-             {
-                 LogBox.AppendText("Работаем с файлом " + filename + "\n");
-                 FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite);
-                 BinaryReader binaryReader = new BinaryReader(fileStream);
-                 byte value5 = binaryReader.ReadByte();
-                 byte value3 = binaryReader.ReadByte();
-                 int value4 = binaryReader.ReadByte();// numStrings     
-                 int numStrings = binaryReader.ReadInt32();
-                 int num3 = 0;
-                 while (num3 < numStrings)
-                 {
-                     long id = binaryReader.ReadInt64();
-                     byte b = binaryReader.ReadByte();
-                     byte value = binaryReader.ReadByte();
-                     float value2 = binaryReader.ReadSingle();
-                     int num5 = binaryReader.ReadInt32();
-                     int num6 = binaryReader.ReadInt32();
-                     binaryReader.ReadInt32();
-                     long position = binaryReader.BaseStream.Position;
-                     if (num5 > 0)
-                     {
-                         ulong key = uniqueId(id, b);
-                         binaryReader.BaseStream.Seek(num6, SeekOrigin.Begin);
-                         byte[] bytes = binaryReader.ReadBytes(num5);
-                         string text = Encoding.UTF8.GetString(bytes);
-                         if (Regex.IsMatch(text, @"\p{IsCyrillic}"))
-                         {
-                             if (!dictionary_xml_files.ContainsKey(key) && Encoding.UTF8.GetString(bytes) != "")
-                             {
-                                 string new_name = filename;
-                                 new_name = new_name.Substring(4);
-                                 dictionary_xml_files.Add(key, text);
-                                 asd++;
-                                 Console.WriteLine(key + "----" + new_name + "---" + Encoding.UTF8.GetString(bytes));
-                             }
-
-                         }
-
-                     }
-                     binaryReader.BaseStream.Position = position;
-                     num3++;
-                 }
-                 binaryReader.Close();
-                 fileStream.Close();
-                 //Console.WriteLine(asd);
-             }
-             Console.WriteLine(asd);
-
-            string[] allfiles = Directory.GetFiles("stb\\");
-            foreach (string filename in allfiles)
-            {
-                LogBox.AppendText("Работаем с файлом " + filename + "\n");
-                FileStream fileStream = new FileStream(filename, FileMode.Open, FileAccess.ReadWrite);
-                BinaryReader binaryReader = new BinaryReader(fileStream);
-                byte value5 = binaryReader.ReadByte();
-                byte value3 = binaryReader.ReadByte();
-                int value4 = binaryReader.ReadByte();// numStrings     
-                int numStrings = binaryReader.ReadInt32();
-                int num3 = 0;
-                while (num3 < numStrings)
-                {
-                    //Console.WriteLine(numStrings);
-                    int id = binaryReader.ReadInt32();
-                    //Console.WriteLine(id);
-                    int id2 = binaryReader.ReadInt32();
-                    //Console.WriteLine(id2);
-                    int bitflag = binaryReader.ReadInt16();
-                    //Console.WriteLine(bitflag);
-                    int version = binaryReader.ReadInt32();
-                    //Console.WriteLine(version);
-                    int len = binaryReader.ReadInt32();
-                    //Console.WriteLine(len);
-                    int offset = binaryReader.ReadInt32();
-                    //Console.WriteLine(offset);
-                    int len2 = binaryReader.ReadInt32();
-                    //Console.WriteLine(len2);
-                    long position = binaryReader.BaseStream.Position;
-                    if (len > 0)
-                    {
-                        binaryReader.BaseStream.Seek(offset, SeekOrigin.Begin);
-                        byte[] bytes = binaryReader.ReadBytes(len);
-                        string text = Encoding.UTF8.GetString(bytes).Replace("\n", "");
-
-                        if (dictionary_stb.ContainsKey(id + id2))
-                            jddsd = 1;
-                        else
-                            dictionary_stb.Add(id + id2, text);                        
-                    }
                     binaryReader.BaseStream.Position = position;
-                    num3++;
-                }
-                binaryReader.Close();
-                fileStream.Close();               
-            */
-            /*   xml-----------------
-                    Dictionary<ulong, string> dictionary_xml_m = new Dictionary<ulong, string>();
-                    Dictionary<ulong, string> dictionary_xml_w = new Dictionary<ulong, string>();
-                    XmlDocument xDoc1 = new XmlDocument();
-                    xDoc1.Load("db\\ru_google_mw.xml");
-                    string text_ru_m = "";
-                    string text_ru_w = "";
-                    int jddsd = 0;
-                    string translator_m="1";
-                    string translator_w = "1";
-                    string filesinfo = "";
-                    XmlElement xRoot1 = xDoc1.DocumentElement;
-                    int jks = 1;
-                    foreach (XmlNode childnode in xRoot1)
-                    {
-                        if (childnode.Name == "filesinfo")
-                            filesinfo = childnode.InnerText;
-                        if (childnode.Name == "hash")
-                            hash_g = UInt32.Parse(childnode.InnerText);
-                        if (childnode.Name == "key")
-                            vOut = UInt64.Parse(childnode.InnerText);                        
-                        if (childnode.Name == "text_ru_m")
-                        {
-                            text_ru_m = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_m=childnode.Attributes.GetNamedItem("transl").Value;                            
-                        }
-                        if (childnode.Name == "text_ru_w")
-                        {
-                            text_ru_w = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_w = childnode.Attributes.GetNamedItem("transl").Value;
-                        }
-                        if (jks % 6 == 0)
-                        {                          
-                        }
-                        jks++;
-                    }
-                    */
+                    uint num4 = binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    uint zsize = binaryReader.ReadUInt32();
+                    uint size = binaryReader.ReadUInt32();
+                    uint hash = binaryReader.ReadUInt32();
+                    uint num5 = binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt16();
+                    position = binaryReader.BaseStream.Position;
+                    if (num4 == 0)
+                        break;
 
+                    //Console.WriteLine(num4 + "---" + zsize + "---" + size + "---" + hash + "---" + num5.ToString("X") + "---" + num5);
+                    /*if (num5.ToString("X") == "CE7C8110")
+                    {
+                        Console.WriteLine(num4 + "---" + zsize + "---" + size + "---" + hash + "---" + num5.ToString("X") + "---" + num5);
+                        
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                        //Packfont(fileStream, num4, zsize, size, hash, num5, endtable, "bwaui_character_create_window.gfx");
+                    }*/
+                    if (num5.ToString("X") == "994442C9" )
+                    {
+                        Packfont(fileStream, num4, zsize, size, hash, num5, endtable, "swtor_fonts.gfx");
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                    }
+                    if (num5.ToString("X") == "EC874439")
+                    { 
+                        Packfont(fileStream, num4, zsize, size, hash, num5, endtable, "drawtext_fonts.swf");
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                    }
+                }
+                num2--;
+            }
+            int num6 = (int)filescount % 1000;
+            if (cou + num6 + 1 > 1000)
+            {
+                BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+                binaryWriter.BaseStream.Position = lastoffes;
+                binaryWriter.Write(cou + num6 + 1);
+                binaryWriter.Close();
+                fileStream.Close();
+            }
+            Console.WriteLine("----");
+        }
+        public void Packfont(FileStream fileStream, uint off, uint zsize, uint size, uint hash2, uint hash1, int endtable,string file_font_new)
+        {
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Position = off;
+            binaryReader.ReadBytes(36);
+            byte[] input = binaryReader.ReadBytes((int)zsize);
+            byte[] buffer = new byte[size];
+            Inflater inflater = new Inflater();
+            inflater.SetInput(input);
+            inflater.Inflate(buffer);
+
+
+
+
+           
+
+
+
+
+
+
+
+            Console.WriteLine(off + "---" + zsize + "---" + size + "---" + hash2 + "---" + hash1 + "---" + endtable);
+
+
+            MemoryStream memoryStream = new MemoryStream();
+            using (FileStream file = new FileStream(file_font_new, FileMode.Open, FileAccess.Read))
+                file.CopyTo(memoryStream);
+            MemoryStream memoryStream2 = new MemoryStream();
+            Deflater deflater = new Deflater(9);
+            deflater.SetInput(memoryStream.ToArray());
+            deflater.Finish();
+            byte[] array = new byte[size * 3];
+            while (!deflater.IsNeedingInput)
+            {
+                int count = deflater.Deflate(array);
+                memoryStream2.Write(array, 0, count);
+                if (deflater.IsFinished)
+                    break;
+            }
+            deflater.Reset();
+            int newsize = memoryStream.ToArray().Length;
+            int newzsize = memoryStream2.ToArray().Length;
+
+            byte[] array2 = new byte[36];
+            array2[0] = 2;
+            array2[2] = 32;
+            byte[] array3 = new byte[array2.Length + memoryStream2.ToArray().Length];
+            array2.CopyTo(array3, 0);
+            memoryStream2.ToArray().CopyTo(array3, array2.Length);
+
+            Console.WriteLine(off + "---" + newzsize + "---" + newsize + "---" + hash2 + "---" + hash1 + "---" + endtable);
+            Hhh(fileStream, array3, newzsize, newsize, hash2, hash1, endtable);
+
+
+        }
+        public int EndOff(FileStream fileStream)
+        {
+            int result = 0;
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
+            uint num = binaryReader.ReadUInt32();
+            binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
+            uint num2 = binaryReader.ReadUInt32();
+            int num3 = (int)Math.Ceiling((double)num2 / 1000.0);
+            binaryReader.BaseStream.Seek(num, SeekOrigin.Begin);
+            long position = binaryReader.BaseStream.Position;
+            int num4 = 0;
+            long num5 = 0L;
+            while (num3 > 0)
+            {
+                binaryReader.BaseStream.Position = position;
+                uint num6 = binaryReader.ReadUInt32();
+                if (num6 != 1000)
+                {
+                    break;
+                }
+                position = binaryReader.ReadUInt32();
+                binaryReader.ReadUInt32();
+                for (int i = 0; i < num6; i++)
+                {
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt16();
+                    num5 = binaryReader.BaseStream.Position;
+                    num4++;
+                    if (num4 == num2)
+                    {
+                        result = (int)num5 + 34;
+                        break;
+                    }
+                }
+                num3--;
+            }
+            return result;
+        }
+        public void Hhh(FileStream fileStream, byte[] z, int newzsize, int newsize, uint hash2, uint hash1, int endtable)
+        {
+            BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+            uint textoffset = (uint)fileStream.Length;
+            binaryWriter.BaseStream.Position = fileStream.Length;
+            binaryWriter.Write(z);
+            FileTable(fileStream, endtable, textoffset, newzsize, newsize, hash2, hash1);
+        }
+        public void FileTable(FileStream fileStream, int endtable, uint textoffset, int newzsize, int newsize, uint hash2, uint hash1)
+        {
+            cou++;
+            BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+            binaryWriter.BaseStream.Position = endtable;
+            binaryWriter.Write(textoffset);
+            binaryWriter.Write(0);
+            binaryWriter.Write(36);
+            binaryWriter.Write(newzsize);
+            binaryWriter.Write(newsize);
+            binaryWriter.Write(hash2);
+            binaryWriter.Write(hash1);
+            binaryWriter.Write(0);
+            binaryWriter.Write((short)1);
+            this.endtable += 34;
         }
 
         private void LinkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1234,6 +906,23 @@ namespace SWToR_RUS
             using (MySqlConnection conn = new MySqlConnection(connStr_mysql))
             {
                 conn.Open();
+                int verified_user = 0;
+                //смотрим пользователя
+                if (Config.AppSettings.Settings["author"].Value != "" && Config.AppSettings.Settings["email"].Value != "")
+                {
+                    string sql_select_user = "SELECT id, email, name, pass,status FROM users WHERE email='" + Config.AppSettings.Settings["email"].Value + "' AND name = '" + Config.AppSettings.Settings["author"].Value + "' AND verified='1';";
+                    MySqlCommand command = new MySqlCommand(sql_select_user, conn);
+                    MySqlDataReader row = command.ExecuteReader();
+                    if (row.HasRows)
+                        verified_user = 1;
+                    else
+                        verified_user = 0;
+                    row.Close();
+                    command.Dispose();
+                }
+                else
+                    verified_user = 0;
+                Console.WriteLine(verified_user);
                 foreach (string filename in allfiles)
                 {
                     LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Работаем с файлом " + filename + "\n")));
@@ -1266,26 +955,26 @@ namespace SWToR_RUS
                             {
                                 if (translator_m_import != "Deepl" && translator_w_import != "Deepl")
                                 {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s') WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='"+ verified_user + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','"+ verified_user + "')";
                                 }
                                 else if (translator_m_import != "Deepl")
                                 {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s') WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "')";
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
                                 }
                                 else if (translator_w_import != "Deepl")
                                 {
-                                    sql_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s') WHERE key_unic ='" + key_import + "' AND translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_w,translator_w) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                    sql_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "'";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_w,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','" + verified_user + "')";
                                 }
                             }
                             else if (text_ru_m_import != "")
                             {
                                 if (translator_m_import != "Deepl")
                                 {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s') WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "')";
+                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
+                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
                                 }
                             }
                             MySqlCommand update = new MySqlCommand(sql_update, conn);
@@ -1386,16 +1075,18 @@ namespace SWToR_RUS
                         conn.Open();
                         if (Config.AppSettings.Settings["auth_translate"].Value == "1")//Если стоит отметка запрета загрузки заблокированных переводов, получаем список заблокированных авторов
                         {
-                            sql = "SELECT name FROM users WHERE status=1";
+                            sql = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM translated WHERE (tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s') AND veryfied='1')";
+                            /*sql = "SELECT name FROM users WHERE status=1";
                             MySqlCommand command = new MySqlCommand(sql, conn);
                             MySqlDataReader reader1 = command.ExecuteReader();
                             while (reader1.Read())
                             {
                                 blocked_users.Add(reader1["name"].ToString());
                             }
-                            reader1.Close();
+                            reader1.Close();*/
                         }
-                        sql = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
+                        else
+                            sql = "SELECT key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w FROM translated WHERE tr_datetime>STR_TO_DATE('" + Config.AppSettings.Settings["row_updated_from_server"].Value + "', '%d.%m.%Y %H:%i:%s')";
                         MySqlCommand command2 = new MySqlCommand(sql, conn)
                         {
                             CommandText = sql
@@ -1455,7 +1146,7 @@ namespace SWToR_RUS
                             sqllite_update = "";
                             if (text_ru_m_import != "" && text_ru_w_import != "")//Если в строке и М и Ж варианты перевода
                             {
-                                if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
+                                /*if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
                                 {
                                     string sql_select = "SELECT text_en, text_ru_m, text_ru_w, translator_m, translator_w FROM Translated WHERE key_unic='" + key_import + "'";
                                     sqlite_cmd.CommandText = sql_select;
@@ -1504,12 +1195,12 @@ namespace SWToR_RUS
                                     }
                                     reader1.Close();
                                 }
-                                else
+                                else*/
                                     sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                             }
                             else if (text_ru_m_import != "")//Если в строке только М вариант перевода
                             {
-                                if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
+                                /*if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
                                 {
                                     string sql_select = "SELECT text_en, text_ru_m, translator_m FROM Translated WHERE key_unic='" + key_import + "'";
                                     sqlite_cmd.CommandText = sql_select;
@@ -1535,12 +1226,12 @@ namespace SWToR_RUS
                                     }
                                     reader1.Close();
                                 }
-                                else
+                                else*/
                                     sqllite_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                             }
                             else if (text_ru_w_import != "")//Если в строке только Ж вариант перевода
                             {
-                                if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
+                                /*if (Config.AppSettings.Settings["auth_translate"].Value == "1" || Config.AppSettings.Settings["translate_restrict"].Value == "1")
                                 {
                                     string sql_select = "SELECT text_en, text_ru_m, translator_m FROM Translated WHERE key_unic='" + key_import + "'";
                                     sqlite_cmd.CommandText = sql_select;
@@ -1566,7 +1257,7 @@ namespace SWToR_RUS
                                     }
                                     reader1.Close();
                                 }
-                                else
+                                else*/
                                     sqllite_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "' WHERE key_unic ='" + WebUtility.HtmlEncode(key_import) + "';";
                             }
                             if (sqllite_update != "")
@@ -1575,7 +1266,7 @@ namespace SWToR_RUS
                                 add_list.Add(key_import);
                                 num_edited_rows++;
                             }
-                            if (xml_text != "")
+                            /*if (xml_text != "")
                             {
                                 if (!Directory.Exists("blocked_translations"))//Создаём папку для блокированных переводов
                                     Directory.CreateDirectory("blocked_translations");
@@ -1591,7 +1282,7 @@ namespace SWToR_RUS
                                 {
                                     tmp_save.WriteLine(xml_text);
                                 }
-                            }
+                            }*/
                             ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
                         }
                         jks++;
@@ -1611,13 +1302,13 @@ namespace SWToR_RUS
                         transaction.Commit();
                     }
                     File.Delete("tmp\\server_update.xml");
-                    if (count_for_xml != 0)
+                    /*if (count_for_xml != 0)
                     {
                         using (StreamWriter tmp_save = new StreamWriter("blocked_translations\\" + xml_name + ".xml", true, encoding: Encoding.UTF8))
                         {
                             tmp_save.WriteLine("</rezult>");
                         }
-                    }
+                    }*/
                     string[] allrows = add_list.ToArray();
                     sqllite_update = string.Format("SELECT fileinfo FROM Translated WHERE key_unic in ({0}) GROUP BY fileinfo", string.Join(", ", allrows));
                     sqlite_cmd.CommandText = sqllite_update;
@@ -1637,9 +1328,9 @@ namespace SWToR_RUS
             Config.Save(ConfigurationSaveMode.Modified);
             ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
             LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Обновление локальной БД закончено. Загружено " + num_edited_rows + " строк.\n")));
-            if (count_for_xml != 0)
+            /*if (count_for_xml != 0)
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("При загрузке обнаружены строки, которые заменят ваш перевод! Они сохранены в папке blocked_translations.\n")));
-
+            */
         }
         private void Recover_Click(object sender, EventArgs e)//Восстановление резервной копии БД
         {
@@ -1685,7 +1376,12 @@ namespace SWToR_RUS
 
         private void PictureBox2_Click(object sender, EventArgs e)
         {
-            Process.Start("http://www.swtor.com/r/zlfJtV");
+            if (steam_game.Checked == true)
+                Process.Start("steam://rungameid/1286830");
+            else
+                Process.Start(GamePath + "\\launcher.exe");
+                
+
         }
 
         private void Label1_Click(object sender, EventArgs e)//Скачиваем и открываем Инстукцию
@@ -1712,7 +1408,7 @@ namespace SWToR_RUS
         private void Update_app_method()//Запуск обновления приложения
         {
             if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "updater.exe"))
-                Downloading_Files("https://drive.google.com/uc?export=download&id=1QiIVmdCQ-12d1cbMuaCSv7YiarFK0TYs", "updater.exe"); //Загружаем обновление            
+                Downloading_Files("https://drive.google.com/uc?export=download&id=13fy8SNiBjnWEBzOc9F4v_ljKTWj3Zih1", "updater.exe"); //Загружаем обновление            
             Process proc = new Process();
             proc.StartInfo.WorkingDirectory = Application.StartupPath;
             proc.StartInfo.FileName = AppDomain.CurrentDomain.BaseDirectory + "updater.exe";
@@ -1881,7 +1577,7 @@ namespace SWToR_RUS
             if (!File.Exists("db\\hashes_filename.txt"))//Проверяем наличие файла с хэшами игры
             {
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл hashes_filename.txt...начинаем загрузку...\n")));
-                Downloading_Files("https://drive.google.com/uc?export=download&id=17LYGNgjgARgIxixgytyFoXaOw5C58aBN", "db\\hashes_filename.txt");//Загружаем обновление
+                Downloading_Files("https://drive.google.com/uc?export=download&id=19J51bZyJNLoFQ326-HvVOaZ4DFVpYErS", "db\\hashes_filename.txt");//Загружаем обновление
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
             }
             if (!File.Exists("geckodriver.exe"))//Проверяем наличие драйвера для Firefox
@@ -1893,7 +1589,7 @@ namespace SWToR_RUS
             if (!File.Exists("db\\translate.db3"))
             {
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Отсутствует файл базы переводов translate.db3...начинаем загрузку...\n")));
-                FileDownloader.DownloadFileFromURLToPath("https://drive.google.com/file/d/1fqQhx8I3fWjmm2SYmZLkfk_Ndmd-5P6M/view?usp=sharing", "db\\translate.db3");
+                FileDownloader.DownloadFileFromURLToPath("https://drive.google.com/uc?export=download&id=1u_pmWfu655HUSLZMnLfUM7wyp1_AAzLJ", "db\\translate.db3");
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Загрузка завершена...\n")));
             }
             if (!File.Exists("WebDriver.dll"))
@@ -2288,7 +1984,7 @@ namespace SWToR_RUS
                     Directory.CreateDirectory("tmp");
                 if (File.Exists(CurDir + "tmp\\info.txt"))//Удаляем файл с информацией о последнем патче
                     File.Delete(CurDir + "tmp\\info.txt");
-                Downloading_Files("https://drive.google.com/uc?export=download&id=1VjlEABAWwP1K-0gKgskSkO29gpimKvkC", "tmp\\info.txt");//Загружаем файл с информацией о версии приложения
+                Downloading_Files("https://drive.google.com/uc?export=download&id=1-K2Zv8mzDztoQSOh30Yvcy3Qg6TACqS2", "tmp\\info.txt");//Загружаем файл с информацией о версии приложения
                 string version_current = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 string version_new = version_current;
                 version_new = File.ReadLines("tmp\\info.txt").Skip(0).First();//Считываем первую строку, в ней указана версия
@@ -2334,6 +2030,132 @@ namespace SWToR_RUS
             }
             LogBox.AppendText("Готово.\n");
             Enabled = true;
+
+
+        }
+
+        private void pictureBox1_Click_1(object sender, EventArgs e)
+        {
+            Process.Start("https://funpay.ru/users/1912764/");
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            cou = 0;
+            FileStream fileStream = new FileStream("main_gfx_1.tor", FileMode.Open, FileAccess.ReadWrite);
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Seek(12L, SeekOrigin.Begin);
+            uint num = binaryReader.ReadUInt32();
+            binaryReader.BaseStream.Seek(24L, SeekOrigin.Begin);
+            filescount = binaryReader.ReadUInt32();
+            endtable = 0;
+            endtable = EndOff(fileStream);
+            int num2 = (int)Math.Ceiling((double)filescount / 1000.0);
+            binaryReader.BaseStream.Seek(num, SeekOrigin.Begin);
+            long position = binaryReader.BaseStream.Position;
+            while (num2 > 0)
+            {
+                binaryReader.BaseStream.Position = position;
+                uint num3 = binaryReader.ReadUInt32();
+                if (num3 != 1000)
+                    break;
+                if (binaryReader.ReadUInt32() == 0)
+                    lastoffes = (int)binaryReader.BaseStream.Position - 8;
+                binaryReader.ReadUInt32();
+                position = binaryReader.BaseStream.Position;
+                for (int i = 0; i < num3; i++)
+                {
+                    binaryReader.BaseStream.Position = position;
+                    uint num4 = binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    uint zsize = binaryReader.ReadUInt32();
+                    uint size = binaryReader.ReadUInt32();
+                    uint hash = binaryReader.ReadUInt32();
+                    uint num5 = binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt32();
+                    binaryReader.ReadUInt16();
+                    position = binaryReader.BaseStream.Position;
+                    if (num4 == 0)
+                        break;
+
+                    //Console.WriteLine(num4 + "---" + zsize + "---" + size + "---" + hash + "---" + num5.ToString("X") + "---" + num5);
+                    if (num5.ToString("X") == "F0072695")
+                    {
+                        Console.WriteLine(num4 + "---" + zsize + "---" + size + "---" + hash + "---" + num5.ToString("X") + "---" + num5);
+
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                        Packfont2(fileStream, num4, zsize, size, hash, num5, endtable, "bwaui_charactersheet.gfx");
+                    }
+                    /*if (num5.ToString("X") == "994442C9" )
+                    {
+                        Packfont(fileStream, num4, zsize, size, hash, num5, endtable, "swtor_fonts.gfx");
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                    }
+                    if (num5.ToString("X") == "EC874439")
+                    { 
+                        Packfont(fileStream, num4, zsize, size, hash, num5, endtable, "drawtext_fonts.swf");
+                        Console.WriteLine("aaaaaaaaaaaaaaa");
+                    }*/
+                }
+                num2--;
+            }
+            int num6 = (int)filescount % 1000;
+            if (cou + num6 + 1 > 1000)
+            {
+                BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+                binaryWriter.BaseStream.Position = lastoffes;
+                binaryWriter.Write(cou + num6 + 1);
+                binaryWriter.Close();
+                fileStream.Close();
+            }
+            Console.WriteLine("----");
+        }
+        public void Packfont2(FileStream fileStream, uint off, uint zsize, uint size, uint hash2, uint hash1, int endtable, string file_font_new)
+        {
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            binaryReader.BaseStream.Position = off;
+            binaryReader.ReadBytes(36);
+            byte[] input = binaryReader.ReadBytes((int)zsize);
+            byte[] buffer = new byte[size];
+
+            using (var fs = new FileStream("test.gfx", FileMode.Create, FileAccess.Write))
+            {
+                fs.Write(input, 0, input.Length);
+            }
+
+
+            Console.WriteLine(off + "---" + zsize + "---" + size + "---" + hash2 + "---" + hash1 + "---" + endtable);
+
+
+            MemoryStream memoryStream = new MemoryStream();
+            using (FileStream file = new FileStream(file_font_new, FileMode.Open, FileAccess.Read))
+                file.CopyTo(memoryStream);
+            MemoryStream memoryStream2 = new MemoryStream();
+            Deflater deflater = new Deflater(9);
+            deflater.SetInput(memoryStream.ToArray());
+            deflater.Finish();
+            byte[] array = new byte[size * 3];
+            while (!deflater.IsNeedingInput)
+            {
+                int count = deflater.Deflate(array);
+                memoryStream2.Write(array, 0, count);
+                if (deflater.IsFinished)
+                    break;
+            }
+            deflater.Reset();
+            int newsize = memoryStream.ToArray().Length;
+            int newzsize = memoryStream2.ToArray().Length;
+
+            byte[] array2 = new byte[36];
+            array2[0] = 2;
+            array2[2] = 32;
+            byte[] array3 = new byte[array2.Length + memoryStream2.ToArray().Length];
+            array2.CopyTo(array3, 0);
+            memoryStream2.ToArray().CopyTo(array3, array2.Length);
+
+            Console.WriteLine(off + "---" + newzsize + "---" + newsize + "---" + hash2 + "---" + hash1 + "---" + endtable);
+            Hhh(fileStream, array3, newzsize, newsize, hash2, hash1, endtable);
 
 
         }
