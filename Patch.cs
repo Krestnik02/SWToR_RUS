@@ -55,6 +55,20 @@ namespace SWToR_RUS
 
         public void ConnectDB()
         {
+            string str = ConfigurationManager.AppSettings["gamepath"];
+
+            /*
+            string font_data_raw = File.ReadAllText("db\\fonts\\font_data.json");
+
+            JArray font_data_array = JArray.Parse(font_data_raw);
+            foreach (JObject font_data in font_data_array.Children<JObject>())
+            {
+                PatchGfxProduction(str, font_data);
+            }
+            */
+
+            File.Copy("db\\main_gfx_1.tor", str + "\\swtor\\retailclient\\main_gfx_1.tor", true);
+
             byte[] array = File.ReadAllBytes("db\\fonts.gfx");
             string a = "0";
             string a2 = "0";
@@ -156,7 +170,7 @@ namespace SWToR_RUS
             sqlite_conn.Close();
             ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Maximum = list.Count));
             ProgressBar_F1.Invoke((MethodInvoker)(() => ProgressBar_F1.Value = 0));
-            string str = ConfigurationManager.AppSettings["gamepath"];
+            
             PatchMain(str + "\\Assets\\swtor_maln_global_1.tor", "maln_global_1.tor");
             PatchMain(str + "\\Assets\\swtor_ru-wm_global_1.tor", "ru-wm_global_1.tor");
             PatchMain(str + "\\Assets\\swtor_ru-ww_global_1.tor", "ru-ww_global_1.tor");
@@ -214,6 +228,34 @@ namespace SWToR_RUS
             binaryWriter.Close();
             fileStream.Close();
         }
+
+        /*
+        public void PatchGfxProduction(string gamepath, dynamic font_data) // Adds russian fonts for the interface
+        {
+            byte[] file_content = File.ReadAllBytes("db\\fonts\\" + font_data.filename);
+            byte[] file_metadata_content = File.ReadAllBytes("db\\fonts\\" + font_data.metadata_filename);
+
+            FileStream fileStream = new FileStream(gamepath + font_data.archive, FileMode.Open, FileAccess.ReadWrite);
+            int num = EndOff(fileStream);
+            BinaryWriter binaryWriter = new BinaryWriter(fileStream);
+            uint num2 = (uint)fileStream.Length;
+            binaryWriter.BaseStream.Position = num;
+            binaryWriter.Write(num2); // new file offset
+            binaryWriter.Write(0); // new file offset is 8 byte, write 0
+            binaryWriter.Write((UInt32)font_data.metadata_size); // metadata size
+            binaryWriter.Write((UInt32)font_data.compressed_size); // size of file after zlib compresion (if it is compressed in the archive)
+            binaryWriter.Write((UInt32)font_data.uncompressed_size); // size of original file
+            binaryWriter.Write((UInt32)font_data.hash1);
+            binaryWriter.Write((UInt32)font_data.hash2);
+            binaryWriter.Write((UInt32)font_data.crc);
+            binaryWriter.Write((UInt16)font_data.is_compressed);
+            binaryWriter.BaseStream.Position = num2;
+            binaryWriter.Write(file_metadata_content);
+            binaryWriter.Write(file_content);
+            binaryWriter.Close();
+            fileStream.Close();
+        }
+        */
 
         public int EndOff(FileStream fileStream)
         {
@@ -315,7 +357,7 @@ namespace SWToR_RUS
                 binaryReader.BaseStream.Seek(num2 + 36, SeekOrigin.Begin);
                 byte[] bytes = binaryReader.ReadBytes((int)count);
                 string s = Encoding.UTF8.GetString(bytes).Replace("main_global_1.tor", replace).Replace("main_gfx_assets_1.tor", "maln_gfx_assets_1.tor")
-                    .Replace("en-us_global_1.tor", replace);
+                    .Replace("en-us_global_1.tor", replace).Replace("main_gfx_1.tor", "maln_gfx_1.tor");
                 byte[] bytes2 = Encoding.UTF8.GetBytes(s);
                 BinaryWriter binaryWriter = new BinaryWriter(fileStream);
                 binaryWriter.BaseStream.Position = num2 + 36;

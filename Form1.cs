@@ -140,7 +140,7 @@ namespace SWToR_RUS
                                 {
                                     if (File.Exists(GamePath + "\\Assets\\swtor_en-us_global_1_tmp.tor") || File.Exists(GamePath + "\\Assets\\swtor_main_global_1_tmp.tor"))
                                         TryFix();//Видимо русификатор некорректно завершил работу, пытаемся вернуть оригинальные файлы на место
-                                    if (File.Exists(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor"))//Запоминаем если русификатор уже стоит
+                                    if (File.Exists(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor") || File.Exists(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup"))//Запоминаем если русификатор уже стоит
                                         RusInstalled = 1;
                                     Install_btn.Text = "Переустановить";
                                     del_btn.Enabled = true;
@@ -371,6 +371,7 @@ namespace SWToR_RUS
             await CopyFileAsync(GamePath + "\\Assets\\swtor_en-us_global_1.tor", GamePath + "\\Assets\\swtor_ru-ww_global_1.tor");
             ProgressBar1.Value += 2;
             await CopyFileAsync(GamePath + "\\Assets\\swtor_main_gfx_assets_1.tor", GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor");
+            await CopyFileAsync(GamePath + "\\swtor\\retailclient\\main_gfx_1.tor", GamePath + "\\swtor\\retailclient\\main_gfx_1.backup");
             ProgressBar1.Value += 3;
             await CopyFileAsync(GamePath + "\\Assets\\swtor_main_global_1.tor", GamePath + "\\Assets\\swtor_maln_global_1.tor");
             string hash_original = CalculateMD5(GamePath + "\\Assets\\swtor_main_global_1.tor");
@@ -496,6 +497,7 @@ namespace SWToR_RUS
             {
                 if (steam_game.Checked == true)
                     TryFix();
+
                 if (File.Exists(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor"))
                     File.Delete(GamePath + "\\Assets\\swtor_ru-wm_global_1.tor");
                 if (File.Exists(GamePath + "\\Assets\\swtor_ru-ww_global_1.tor"))
@@ -504,6 +506,14 @@ namespace SWToR_RUS
                     File.Delete(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor");
                 if (File.Exists(GamePath + "\\Assets\\swtor_maln_global_1.tor"))
                     File.Delete(GamePath + "\\Assets\\swtor_maln_global_1.tor");
+
+                if (File.Exists(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup"))
+                {
+                    File.Copy(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup", GamePath + "\\swtor\\retailclient\\main_gfx_1.tor", true);
+                    File.Delete(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup");
+                }
+                    
+
             }
             catch (Exception)
             {
