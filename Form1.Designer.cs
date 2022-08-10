@@ -78,6 +78,7 @@ namespace SWToR_RUS
             this.GamePathTextBox = new System.Windows.Forms.TextBox();
             this.Ins_font = new System.Windows.Forms.Button();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.linkLabel4 = new System.Windows.Forms.LinkLabel();
             this.label6 = new System.Windows.Forms.Label();
             this.row_translated = new System.Windows.Forms.Label();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
@@ -215,8 +216,7 @@ namespace SWToR_RUS
             // changes
             // 
             this.changes.AutoSize = true;
-            this.changes.Checked = true;
-            this.changes.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.changes.Enabled = false;
             this.changes.Location = new System.Drawing.Point(6, 46);
             this.changes.Name = "changes";
             this.changes.Size = new System.Drawing.Size(135, 17);
@@ -230,8 +230,7 @@ namespace SWToR_RUS
             // auto_translate
             // 
             this.auto_translate.AutoSize = true;
-            this.auto_translate.Checked = true;
-            this.auto_translate.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.auto_translate.Enabled = false;
             this.auto_translate.Location = new System.Drawing.Point(6, 30);
             this.auto_translate.Name = "auto_translate";
             this.auto_translate.Size = new System.Drawing.Size(134, 17);
@@ -464,6 +463,7 @@ namespace SWToR_RUS
             // 
             // groupBox5
             // 
+            this.groupBox5.Controls.Add(this.linkLabel4);
             this.groupBox5.Controls.Add(this.label6);
             this.groupBox5.Controls.Add(this.row_translated);
             this.groupBox5.Controls.Add(this.linkLabel3);
@@ -479,6 +479,16 @@ namespace SWToR_RUS
             this.groupBox5.TabIndex = 8;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "Информация о программе";
+            // 
+            // linkLabel4
+            // 
+            this.linkLabel4.AutoSize = true;
+            this.linkLabel4.Location = new System.Drawing.Point(252, 60);
+            this.linkLabel4.Name = "linkLabel4";
+            this.linkLabel4.Size = new System.Drawing.Size(26, 13);
+            this.linkLabel4.TabIndex = 22;
+            this.linkLabel4.TabStop = true;
+            this.linkLabel4.Text = "JKC";
             // 
             // label6
             // 
@@ -843,6 +853,7 @@ namespace SWToR_RUS
         private System.Windows.Forms.PictureBox Updater_check;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.LinkLabel linkLabel4;
     }
 }
 

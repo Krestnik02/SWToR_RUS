@@ -695,8 +695,14 @@ namespace SWToR_RUS
                 if (Deepl_First_time == 1)
                 {
                     Deepl_First_time = 0;
-                    FirefoxOptions options = new FirefoxOptions();
+                    //FirefoxOptions options = new FirefoxOptions();
+                    FirefoxProfile profile = new FirefoxProfileManager().GetProfile("Selenium");
+                    FirefoxOptions options = new FirefoxOptions
+                    {
+                        Profile = profile
+                    };
                     //options.AddArguments("--headless");
+                    Thread.Sleep(10000);
                     driver = new FirefoxDriver(options)
                     {
                         Url = "https://deepl.com/translator"
@@ -714,11 +720,11 @@ namespace SWToR_RUS
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")).Count > 0);
                     Actions actionss = new Actions(driver);
-                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")));
                     actionss.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")).Click();
                 }
                 if (driver.FindElement(By.XPath("//*[@dl-test=\"translator-source-lang\"]/button/span/strong")).Text != "английский")
                 {
@@ -734,11 +740,11 @@ namespace SWToR_RUS
                     driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-btn\"]")).Click();
                     Thread.Sleep(1000);
                     wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Count > 0);
+                    wait.Until(d => d.FindElements(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")).Count > 0);
                     Actions actionss = new Actions(driver);
-                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")));
+                    actionss.MoveToElement(driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")));
                     actionss.Perform();
-                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru-RU\"]")).Click();
+                    driver.FindElement(By.XPath("//*[@dl-test=\"translator-target-lang-list\"]/div/div/button[@dl-test=\"translator-lang-option-ru\"]")).Click();
                 }
                 Thread.Sleep(500);
                 try
@@ -763,23 +769,23 @@ namespace SWToR_RUS
                         Thread.Sleep(500);
                     }
                     Thread.Sleep(1000);
-                    if (driver.FindElements(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).Count <= 0)
-                        outputElements = driver.FindElement(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("textContent");
+                    if (driver.FindElements(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).Count <= 0)
+                        outputElements = driver.FindElement(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("textContent");
                     else
-                        outputElements = driver.FindElement(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).GetAttribute("textContent");
+                        outputElements = driver.FindElement(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).GetAttribute("textContent");
                     if (outputElements.Length <= 1)
                     {
                         Thread.Sleep(1000);
-                        if (driver.FindElements(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).Count <= 0)
-                            outputElements = driver.FindElement(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("textContent");
+                        if (driver.FindElements(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).Count <= 0)
+                            outputElements = driver.FindElement(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]")).GetAttribute("textContent");
                         else
-                            outputElements = driver.FindElement(By.XPath(".//div[@dl-test=\"translator-target-result-as-text-container\"]/p[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).GetAttribute("textContent");
+                            outputElements = driver.FindElement(By.XPath(".//li[@class=\"lmt__translations_as_text__item lmt__translations_as_text__main_translation\"]/button[@class=\"lmt__translations_as_text__text_btn\"]/span")).GetAttribute("textContent");
 
                     }
 
                 }
                 catch {
-                    //Console.WriteLine("Error");
+                    Console.WriteLine("Error");
                     Deepl_First_time = 1;
                     driver.Close();
                     driver.Quit();

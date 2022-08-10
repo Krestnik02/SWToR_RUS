@@ -506,14 +506,11 @@ namespace SWToR_RUS
                     File.Delete(GamePath + "\\Assets\\swtor_maln_gfx_assets_1.tor");
                 if (File.Exists(GamePath + "\\Assets\\swtor_maln_global_1.tor"))
                     File.Delete(GamePath + "\\Assets\\swtor_maln_global_1.tor");
-
                 if (File.Exists(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup"))
                 {
                     File.Copy(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup", GamePath + "\\swtor\\retailclient\\main_gfx_1.tor", true);
                     File.Delete(GamePath + "\\swtor\\retailclient\\main_gfx_1.backup");
                 }
-                    
-
             }
             catch (Exception)
             {
@@ -932,107 +929,115 @@ namespace SWToR_RUS
                 }
                 else
                     verified_user = 0;
-                Console.WriteLine(verified_user);
-                foreach (string filename in allfiles)
+                //Console.WriteLine(verified_user);
+                if (verified_user==0)
                 {
-                    LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Работаем с файлом " + filename + "\n")));
-                    ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
-                    int lineCount = File.ReadLines(filename).Count();
-                    ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Maximum = lineCount - 2));
-                    XmlDocument xDoc1 = new XmlDocument();
-                    xDoc1.Load(filename);
-                    XmlElement xRoot1 = xDoc1.DocumentElement;
-                    int jks = 1;
-                    foreach (XmlNode childnode in xRoot1)
+                    LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Вы не идентифицированы! Авторизуйтесь в редакторе и напишите в дискорд канал для получения статуса переводчика https://discord.gg/dhJKxQjpgu .\n")));
+                }
+                else
+                {
+                    foreach (string filename in allfiles)
                     {
-                        if (childnode.Name == "key")
-                            key_import = childnode.InnerText;
-                        if (childnode.Name == "text_en")
-                            text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
-                        if (childnode.Name == "text_ru_m")
+                        LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Работаем с файлом " + filename + "\n")));
+                        ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
+                        int lineCount = File.ReadLines(filename).Count();
+                        ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Maximum = lineCount - 2));
+                        XmlDocument xDoc1 = new XmlDocument();
+                        xDoc1.Load(filename);
+                        XmlElement xRoot1 = xDoc1.DocumentElement;
+                        int jks = 1;
+                        foreach (XmlNode childnode in xRoot1)
                         {
-                            text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            if (childnode.Name == "key")
+                                key_import = childnode.InnerText;
+                            if (childnode.Name == "text_en")
+                                text_en_import = WebUtility.HtmlDecode(childnode.InnerText);
+                            if (childnode.Name == "text_ru_m")
+                            {
+                                text_ru_m_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_m_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            }
+                            if (childnode.Name == "text_ru_w")
+                            {
+                                text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
+                                translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
+                            }
+                            if (jks % 4 == 0)
+                            {
+                                if (text_ru_w_import != "")
+                                {
+                                    if (translator_m_import != "Deepl" && translator_w_import != "Deepl")
+                                    {
+                                        sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
+                                        sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','" + verified_user + "')";
+                                    }
+                                    else if (translator_m_import != "Deepl")
+                                    {
+                                        sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
+                                        sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
+                                    }
+                                    else if (translator_w_import != "Deepl")
+                                    {
+                                        sql_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "'";
+                                        sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_w,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','" + verified_user + "')";
+                                    }
+                                }
+                                else if (text_ru_m_import != "")
+                                {
+                                    if (translator_m_import != "Deepl")
+                                    {
+                                        sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
+                                        sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
+                                    }
+                                }
+                                MySqlCommand update = new MySqlCommand(sql_update, conn);
+                                int numRowsUpdated = update.ExecuteNonQuery();
+                                update.Dispose();
+                                if (numRowsUpdated == 0)
+                                {
+                                    MySqlCommand insert = new MySqlCommand(sql_insert, conn);
+                                    insert.ExecuteNonQuery();
+                                    insert.Dispose();
+                                }
+                                num_edited_rows++;
+                                ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
+                            }
+                            jks++;
                         }
-                        if (childnode.Name == "text_ru_w")
+                        if (!Directory.Exists("user_translation\\done"))
+                            Directory.CreateDirectory("user_translation\\done");
+                        string[] tokens0 = filename.Split(new char[] { '\\' });
+                        Console.WriteLine("user_translation\\done\\" + tokens0.Last() + ".xml");
+                        if (File.Exists("user_translation\\done\\" + tokens0.Last()))
                         {
-                            text_ru_w_import = WebUtility.HtmlDecode(childnode.InnerText);
-                            translator_w_import = WebUtility.HtmlDecode(childnode.Attributes.GetNamedItem("transl").Value);
-                        }
-                        if (jks % 4 == 0)
-                        {
-                            if (text_ru_w_import != "")
+                            DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите перенести новые переводы в него?", "Подтверждение", MessageBoxButtons.YesNo);
+                            if (dialogResult == DialogResult.Yes)
                             {
-                                if (translator_m_import != "Deepl" && translator_w_import != "Deepl")
+                                var lines = File.ReadAllLines("user_translation\\done\\" + tokens0.Last());
+                                var lines2 = File.ReadAllLines("user_translation\\" + tokens0.Last());
+                                File.WriteAllLines("user_translation\\done\\" + tokens0.Last(), lines.Take(lines.Length - 1).ToArray(), encoding: Encoding.UTF8);
+                                using (StreamWriter file_for_exam =
+                                                                                new StreamWriter("user_translation\\done\\" + tokens0.Last(), true, encoding: Encoding.UTF8))
                                 {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='"+ verified_user + "' WHERE key_unic ='" + key_import + "' AND (translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "' OR translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "')";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,text_ru_w,translator_m,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','"+ verified_user + "')";
+                                    for (int jk = 1; jk <= lines2.Length - 2; jk++)
+                                        file_for_exam.WriteLine(lines2[jk]);
+                                    file_for_exam.WriteLine("</rezult>");
                                 }
-                                else if (translator_m_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
-                                }
-                                else if (translator_w_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_w='" + WebUtility.HtmlEncode(text_ru_w_import) + "',translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_w='" + WebUtility.HtmlEncode(translator_w_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_w,translator_w,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_w_import) + "','" + WebUtility.HtmlEncode(translator_w_import) + "','" + verified_user + "')";
-                                }
+                                File.Delete("user_translation\\" + tokens0.Last());
                             }
-                            else if (text_ru_m_import != "")
+                            else
                             {
-                                if (translator_m_import != "Deepl")
-                                {
-                                    sql_update = "UPDATE Translated SET text_ru_m='" + WebUtility.HtmlEncode(text_ru_m_import) + "',translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "',tr_datetime=STR_TO_DATE('" + mysql_time_export + "', '%d.%m.%Y %H:%i:%s'),veryfied='" + verified_user + "' WHERE key_unic ='" + key_import + "' AND translator_m='" + WebUtility.HtmlEncode(translator_m_import) + "'";
-                                    sql_insert = "INSERT INTO Translated(key_unic,text_en,text_ru_m,translator_m,veryfied) VALUES ('" + key_import + "','" + WebUtility.HtmlEncode(text_en_import) + "','" + WebUtility.HtmlEncode(text_ru_m_import) + "','" + WebUtility.HtmlEncode(translator_m_import) + "','" + verified_user + "')";
-                                }
+                                string[] tokens1 = tokens0.Last().Split(new string[] { ".xm" }, StringSplitOptions.None);
+                                File.Move(filename, "user_translation\\done\\" + tokens1[0] + "1.xml");
                             }
-                            MySqlCommand update = new MySqlCommand(sql_update, conn);
-                            int numRowsUpdated = update.ExecuteNonQuery();
-                            update.Dispose();
-                            if (numRowsUpdated == 0)
-                            {
-                                MySqlCommand insert = new MySqlCommand(sql_insert, conn);
-                                insert.ExecuteNonQuery();
-                                insert.Dispose();
-                            }
-                            num_edited_rows++;
-                            ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value += 1));
-                        }
-                        jks++;
-                    }
-                    if (!Directory.Exists("user_translation\\done"))
-                        Directory.CreateDirectory("user_translation\\done");
-                    string[] tokens0 = filename.Split(new char[] { '\\' });
-                    Console.WriteLine("user_translation\\done\\" + tokens0.Last() + ".xml");
-                    if (File.Exists("user_translation\\done\\" + tokens0.Last()))
-                    {
-                        DialogResult dialogResult = MessageBox.Show("Файл с таким именем уже существует. Вы уверены что хотите перенести новые переводы в него?", "Подтверждение", MessageBoxButtons.YesNo);
-                        if (dialogResult == DialogResult.Yes)
-                        {
-                            var lines = File.ReadAllLines("user_translation\\done\\" + tokens0.Last());
-                            var lines2 = File.ReadAllLines("user_translation\\" + tokens0.Last());
-                            File.WriteAllLines("user_translation\\done\\" + tokens0.Last(), lines.Take(lines.Length - 1).ToArray(), encoding: Encoding.UTF8);
-                            using (StreamWriter file_for_exam =
-                                                                            new StreamWriter("user_translation\\done\\" + tokens0.Last(), true, encoding: Encoding.UTF8))
-                            {
-                                for (int jk = 1; jk <= lines2.Length-2; jk++)
-                                    file_for_exam.WriteLine(lines2[jk]);
-                                file_for_exam.WriteLine("</rezult>");
-                            }
-                            File.Delete("user_translation\\" + tokens0.Last());
                         }
                         else
                         {
-                            string [] tokens1 = tokens0.Last().Split(new string[] { ".xm" }, StringSplitOptions.None);
-                            File.Move(filename, "user_translation\\done\\" + tokens1[0] + "1.xml");
+                            File.Move(filename, "user_translation\\done\\" + tokens0.Last());
                         }
                     }
-                    else
-                    {
-                        File.Move(filename, "user_translation\\done\\" + tokens0.Last());
-                    }
                 }
+                
                 conn.Close();
                 ProgressBar1.Invoke((MethodInvoker)(() => ProgressBar1.Value = 0));
                 LogBox.Invoke((MethodInvoker)(() => LogBox.AppendText("Выгрузка закончена. Выгружено " + num_edited_rows + " строк.\n")));
